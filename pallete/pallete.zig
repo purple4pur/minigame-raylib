@@ -45,21 +45,15 @@ pub fn main() !void {
         defer rl.endDrawing();
 
         rl.clearBackground(rl.Color.white);
-        var i: i32 = 0;
-        for (pallete) |color| {
-            rl.drawRectangle(0, 26 * i, 200, 26, color.color);
+        for (pallete, 0..) |color, i| {
+            rl.drawRectangle(0, 26 * @as(i32, @intCast(i)), 200, 26, color.color);
             var textColor = color.color;
             if (std.mem.eql(u8, color.name, "white") or
                 std.mem.eql(u8, color.name, "blank"))
             {
                 textColor = rl.Color.light_gray;
             }
-            rl.drawText(color.name, 220, 26 * i + 3, 20, textColor);
-            i += 1;
+            rl.drawText(color.name, 220, 26 * @as(i32, @intCast(i)) + 3, 20, textColor);
         }
     }
-}
-
-fn f32FromInt(int: anytype) f32 {
-    return @as(f32, @floatFromInt(int));
 }
