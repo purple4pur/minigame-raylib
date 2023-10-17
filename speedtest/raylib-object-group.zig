@@ -45,6 +45,7 @@ pub const ObjectGroup = struct {
         for (self.components.items) |comp| {
             switch (comp.object.*) {
                 .rectangle => |rec| {
+                    if (comp.properties.color == null) @panic(".color is not defined for rectangle");
                     rl.drawRectangleRec(.{
                         .x = @as(f32, @floatFromInt(self.x)) + rec.x,
                         .y = @as(f32, @floatFromInt(self.y)) + rec.y,
@@ -53,6 +54,10 @@ pub const ObjectGroup = struct {
                     }, comp.properties.color.?);
                 },
                 .text => |text| {
+                    if (comp.properties.x == null) @panic(".x is not defined for text");
+                    if (comp.properties.y == null) @panic(".y is not defined for text");
+                    if (comp.properties.size == null) @panic(".size is not defined for text");
+                    if (comp.properties.color == null) @panic(".color is not defined for text");
                     rl.drawText(
                         text,
                         self.x + comp.properties.x.?,
