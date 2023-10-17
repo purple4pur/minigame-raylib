@@ -86,3 +86,33 @@ pub fn main() !void {
         groupK2.drawAll();
     }
 }
+
+const Bar = struct {
+    const Status = enum { released, pressed };
+    const StartEndPair = struct { start: i32, end: i32 };
+    const BarQueue = std.TailQueue(StartEndPair);
+
+    const Self = @This();
+
+    allocator: mem.Allocator,
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+    color: rl.Color,
+    bars: BarQueue,
+    status: Status,
+
+    fn init(allocator: mem.Allocator, x: i32, y: i32, width: i32, height: i32, color: rl.Color) Self {
+        return Self{
+            .allocator = allocator,
+            .x = x,
+            .y = y,
+            .width = width,
+            .height = height,
+            .color = color,
+            .bars = BarQueue{},
+            .status = .released,
+        };
+    }
+};
