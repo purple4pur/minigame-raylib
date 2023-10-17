@@ -15,6 +15,11 @@ pub const programs = [_]Program{
         .path = "pallete/pallete.zig",
         .desc = "Raylib buildin color pallete",
     },
+    .{
+        .name = "speedtest",
+        .path = "speedtest/speedtest.zig",
+        .desc = "",
+    },
 };
 
 pub const tests = [_]Program{
