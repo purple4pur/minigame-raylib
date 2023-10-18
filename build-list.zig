@@ -18,7 +18,7 @@ pub const programs = [_]Program{
     .{
         .name = "speedtest",
         .path = "speedtest/speedtest.zig",
-        .desc = "",
+        .desc = "A simple speed/monitor for osu! players",
     },
 };
 
