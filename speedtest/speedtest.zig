@@ -2,15 +2,16 @@ const std = @import("std");
 const mem = std.mem;
 const rl = @import("raylib");
 const rlg = @import("raylib-object-group.zig");
+const Bar = @import("keyoverlay-bar.zig").Bar;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    rl.initWindow(450, 400, "Speedtest");
+    rl.initWindow(450, 400, "Speedtest [purple4pur]");
     defer rl.closeWindow();
 
-    rl.setTargetFPS(240);
+    rl.setTargetFPS(480);
 
     // groupK1
     // -------
@@ -74,45 +75,38 @@ pub fn main() !void {
     try groupK2.add(&.{ .object = &k2Text, .properties = &k2TextProp });
     //}}}
 
+    var k1Bar = Bar.init(allocator, 0, 15, 400, 30, rl.Color.yellow);
+    defer k1Bar.deinit();
+    var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.yellow);
+    defer k2Bar.deinit();
+
     while (!rl.windowShouldClose()) {
-        k1BgProp.color = if (rl.isKeyDown(rl.KeyboardKey.key_z)) rl.Color.yellow else rl.Color.white;
-        k2BgProp.color = if (rl.isKeyDown(rl.KeyboardKey.key_x)) rl.Color.yellow else rl.Color.white;
+        if (rl.isKeyDown(rl.KeyboardKey.key_z)) {
+            k1BgProp.color = rl.Color.yellow;
+            try k1Bar.pressed();
+        } else {
+            k1BgProp.color = rl.Color.white;
+            try k1Bar.released();
+        }
+
+        if (rl.isKeyDown(rl.KeyboardKey.key_x)) {
+            k2BgProp.color = rl.Color.yellow;
+            try k2Bar.pressed();
+        } else {
+            k2BgProp.color = rl.Color.white;
+            try k2Bar.released();
+        }
+
+        k1Bar.update(1.2);
+        k2Bar.update(1.2);
 
         rl.beginDrawing();
         defer rl.endDrawing();
         rl.clearBackground(rl.Color.white);
 
+        k1Bar.draw();
+        k2Bar.draw();
         groupK1.drawAll();
         groupK2.drawAll();
     }
 }
-
-const Bar = struct {
-    const Status = enum { released, pressed };
-    const StartEndPair = struct { start: i32, end: i32 };
-    const BarQueue = std.TailQueue(StartEndPair);
-
-    const Self = @This();
-
-    allocator: mem.Allocator,
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-    color: rl.Color,
-    bars: BarQueue,
-    status: Status,
-
-    fn init(allocator: mem.Allocator, x: i32, y: i32, width: i32, height: i32, color: rl.Color) Self {
-        return Self{
-            .allocator = allocator,
-            .x = x,
-            .y = y,
-            .width = width,
-            .height = height,
-            .color = color,
-            .bars = BarQueue{},
-            .status = .released,
-        };
-    }
-};
