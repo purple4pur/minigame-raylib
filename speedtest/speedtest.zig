@@ -3,6 +3,7 @@ const mem = std.mem;
 const rl = @import("raylib");
 const rlg = @import("raylib-object-group.zig");
 const Bar = @import("keyoverlay-bar.zig").Bar;
+const Kps = @import("kps.zig").Kps;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -80,7 +81,14 @@ pub fn main() !void {
     var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.yellow);
     defer k2Bar.deinit();
 
+    var kps = Kps.init(allocator, 7, 270, 110, 20, rl.Color.dark_gray);
+    defer kps.deinit();
+
+    var buffer: [64]u8 = undefined;
+
     while (!rl.windowShouldClose()) {
+        const time = rl.getTime();
+
         if (rl.isKeyDown(rl.KeyboardKey.key_z)) {
             k1BgProp.color = rl.Color.yellow;
             try k1Bar.pressed();
@@ -97,8 +105,12 @@ pub fn main() !void {
             try k2Bar.released();
         }
 
+        if (rl.isKeyPressed(rl.KeyboardKey.key_z)) try kps.getKeyPressed(time);
+        if (rl.isKeyPressed(rl.KeyboardKey.key_x)) try kps.getKeyPressed(time);
+
         k1Bar.update(1.2);
         k2Bar.update(1.2);
+        kps.update(time);
 
         rl.beginDrawing();
         defer rl.endDrawing();
@@ -108,5 +120,10 @@ pub fn main() !void {
         k2Bar.draw();
         groupK1.drawAll();
         groupK2.drawAll();
+
+        try kps.drawKps(&buffer);
+        try kps.drawMaxKps(&buffer, 90, 0);
+        try kps.drawBpm(&buffer, 0, 30);
+        try kps.drawMaxBpm(&buffer, 90, 30);
     }
 }
