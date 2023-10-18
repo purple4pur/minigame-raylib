@@ -13,3 +13,5 @@ To list all build targets:
 ```
 zig build -l
 ```
+
+Track progress: purple4pur/minigame-raylib#2.
