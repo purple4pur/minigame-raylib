@@ -15,12 +15,12 @@ pub const Kps = struct {
     size: i32,
     color: rl.Color,
 
-    kps: u16,
-    maxKps: u16,
-    kpsPool: TimeQueue,
-    bpm: u16,
-    maxBpm: u16,
-    bpmPool: TimeQueue,
+    kps: u16 = 0,
+    maxKps: u16 = 0,
+    kpsPool: TimeQueue = TimeQueue{},
+    bpm: u16 = 0,
+    maxBpm: u16 = 0,
+    bpmPool: TimeQueue = TimeQueue{},
 
     pub fn init(allocator: mem.Allocator, numSample: u16, x: i32, y: i32, size: i32, color: rl.Color) Self {
         return Self{
@@ -30,12 +30,6 @@ pub const Kps = struct {
             .y = y,
             .size = size,
             .color = color,
-            .kps = 0,
-            .maxKps = 0,
-            .kpsPool = TimeQueue{},
-            .bpm = 0,
-            .maxBpm = 0,
-            .bpmPool = TimeQueue{},
         };
     }
 
@@ -94,8 +88,8 @@ pub const Kps = struct {
         it = self.bpmPool.first;
         while (it) |node| : (it = next) {
             next = node.next;
-            // store keystrokes within 5s, giving a wider range of valid numSample
-            if (time - node.data < 5.0) break;
+            // store keystrokes within 1.8s
+            if (time - node.data < 1.8) break;
             self.bpmPool.remove(node);
             self.allocator.destroy(node);
         }

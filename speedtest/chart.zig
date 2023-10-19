@@ -14,11 +14,19 @@ pub const Chart = struct {
     width: f32,
     height: f32,
     fontSize: f32,
+    h200: f32,
+    h100: f32,
 
     thickness: f32 = 2,
-    h100: f32,
-    h200: f32,
-    lines: LineQueue,
+    lines: LineQueue = LineQueue{},
+    bpms: [8]f32 = mem.zeroes([8]f32),
+
+    const bpmWeights = [8]f32{ 1, 1, 2, 2, 4, 5, 6, 7 };
+    const bpmWeightTotal = t: {
+        var total: f32 = 0;
+        for (bpmWeights) |w| total += w;
+        break :t total;
+    };
 
     pub fn init(allocator: mem.Allocator, x: f32, y: f32, width: f32, height: f32, fontSize: f32) Self {
         return Self{
@@ -30,7 +38,6 @@ pub const Chart = struct {
             .fontSize = fontSize,
             .h200 = height - fontSize - 2,
             .h100 = (height - fontSize - 2) / 2,
-            .lines = LineQueue{},
         };
     }
 
@@ -47,6 +54,9 @@ pub const Chart = struct {
     pub fn receiveBpm(self: *Self, bpm: u16) !void {
         const hBpm = @as(f32, @floatFromInt(bpm)) * self.h200 / 200;
 
+        for (0..7) |i| self.bpms[i] = self.bpms[i + 1];
+        self.bpms[7] = hBpm;
+
         var nodePtr = try self.allocator.create(LineQueue.Node);
         nodePtr.data = .{
             .from = .{
@@ -55,7 +65,14 @@ pub const Chart = struct {
             },
             .to = .{
                 .x = -1, // -1 marks a new line
-                .y = hBpm,
+                .y = t: {
+                    var y: f32 = 0;
+                    for (self.bpms, bpmWeights) |b, w| {
+                        y += b * w;
+                    }
+                    y /= bpmWeightTotal;
+                    break :t y;
+                },
             },
         };
         self.lines.append(nodePtr);
@@ -166,12 +183,12 @@ pub const Chart = struct {
             }, .{
                 .x = self.x + self.width - node.data.to.x,
                 .y = self.y + self.height - node.data.to.y,
-            }, self.thickness, rl.Color.yellow);
+            }, self.thickness + 1, rl.Color.yellow);
         }
     }
 
     pub fn _debugOutline(self: Self) void {
-        rl.drawRectangleLines(
+        rl.drawRectangleself.Lines(
             @as(i32, @intFromFloat(self.x)),
             @as(i32, @intFromFloat(self.y)),
             @as(i32, @intFromFloat(self.width)),

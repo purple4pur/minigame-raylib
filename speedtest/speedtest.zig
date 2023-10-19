@@ -10,10 +10,10 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    rl.initWindow(450, 400, "Speedtest [purple4pur]");
+    rl.initWindow(450, 340, "Speedtest [purple4pur]");
     defer rl.closeWindow();
 
-    rl.setTargetFPS(480);
+    rl.setTargetFPS(360);
 
     // groupK1
     // -------
@@ -82,7 +82,7 @@ pub fn main() !void {
     var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.yellow);
     defer k2Bar.deinit();
 
-    var kps = Kps.init(allocator, 4, 270, 110, 20, rl.Color.dark_gray);
+    var kps = Kps.init(allocator, 6, 270, 110, 20, rl.Color.dark_gray);
     defer kps.deinit();
 
     var chart = Chart.init(allocator, 15, 170, 420, 150, 20);
@@ -111,13 +111,12 @@ pub fn main() !void {
 
         if (rl.isKeyPressed(rl.KeyboardKey.key_z)) try kps.getKeyPressed(time);
         if (rl.isKeyPressed(rl.KeyboardKey.key_x)) try kps.getKeyPressed(time);
-
         try chart.receiveBpm(kps.bpm);
 
         k1Bar.update(1.2);
         k2Bar.update(1.2);
         kps.update(time);
-        chart.update(0.9);
+        chart.update(0.8);
 
         rl.beginDrawing();
         defer rl.endDrawing();

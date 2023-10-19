@@ -15,8 +15,9 @@ pub const Bar = struct {
     width: i32,
     height: i32,
     color: rl.Color,
-    bars: BarQueue,
-    status: Status,
+
+    bars: BarQueue = BarQueue{},
+    status: Status = .released,
 
     pub fn init(allocator: mem.Allocator, x: i32, y: i32, width: i32, height: i32, color: rl.Color) Self {
         return Self{
@@ -26,8 +27,6 @@ pub const Bar = struct {
             .width = width,
             .height = height,
             .color = color,
-            .bars = BarQueue{},
-            .status = .released,
         };
     }
 
