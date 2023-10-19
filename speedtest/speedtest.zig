@@ -81,7 +81,7 @@ pub fn main() !void {
     var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.yellow);
     defer k2Bar.deinit();
 
-    var kps = Kps.init(allocator, 7, 270, 110, 20, rl.Color.dark_gray);
+    var kps = Kps.init(allocator, 4, 270, 110, 20, rl.Color.dark_gray);
     defer kps.deinit();
 
     var buffer: [64]u8 = undefined;
@@ -121,9 +121,9 @@ pub fn main() !void {
         groupK1.drawAll();
         groupK2.drawAll();
 
-        try kps.drawKps(&buffer);
-        try kps.drawMaxKps(&buffer, 90, 0);
-        try kps.drawBpm(&buffer, 0, 30);
-        try kps.drawMaxBpm(&buffer, 90, 30);
+        try kps.drawKps(&buffer, "kps: {}");
+        try kps.drawMaxKps(&buffer, "max: {}", 90, 0);
+        try kps.drawBpm(&buffer, "bpm={}", 0, 30);
+        try kps.drawMaxBpm(&buffer, "max: {}", 90, 30);
     }
 }

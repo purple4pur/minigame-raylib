@@ -9,7 +9,7 @@ pub const Kps = struct {
     const Self = @This();
 
     allocator: mem.Allocator,
-    resolution: u16,
+    numSample: u16,
     x: i32,
     y: i32,
     size: i32,
@@ -22,10 +22,10 @@ pub const Kps = struct {
     maxBpm: u16,
     bpmPool: TimeQueue,
 
-    pub fn init(allocator: mem.Allocator, resolution: u16, x: i32, y: i32, size: i32, color: rl.Color) Self {
+    pub fn init(allocator: mem.Allocator, numSample: u16, x: i32, y: i32, size: i32, color: rl.Color) Self {
         return Self{
             .allocator = allocator,
-            .resolution = resolution,
+            .numSample = numSample,
             .x = x,
             .y = y,
             .size = size,
@@ -94,8 +94,8 @@ pub const Kps = struct {
         it = self.bpmPool.first;
         while (it) |node| : (it = next) {
             next = node.next;
-            // store keystrokes within 3s, giving a wider range of valid resolution
-            if (time - node.data < 3.0) break;
+            // store keystrokes within 5s, giving a wider range of valid numSample
+            if (time - node.data < 5.0) break;
             self.bpmPool.remove(node);
             self.allocator.destroy(node);
         }
@@ -107,26 +107,31 @@ pub const Kps = struct {
         self.kps = @intCast(self.kpsPool.len);
         if (self.kps > self.maxKps) self.maxKps = self.kps;
 
-        if (self.bpmPool.len <= self.resolution + 1) {
+        // numSample needs +1 keystroke to get delta time
+        if (self.bpmPool.len <= self.numSample + 1) {
             // meaningless to calculate bpm
             self.bpm = 0;
         } else {
-            // calculat bpm using the latest [resolution] keystrokes
+            // calculat bpm using the latest [numSample] keystrokes
             var it = self.bpmPool.last;
             const stampA = it.?.data;
-            for (0..self.resolution) |_| it = it.?.prev;
+            for (0..self.numSample) |_| it = it.?.prev;
             const stampB = it.?.data;
-
             const deltaTime = stampA - stampB;
-            self.bpm = @as(u16, @intFromFloat(15.0 * @as(f64, @floatFromInt(self.resolution)) / deltaTime));
+
+            // in an "osu!" bpm way:
+            //   if you hit a key per 0.25s (avg of 4 hits in a second), you get a bpm of 60.
+            // result in:
+            //   bpm = (15 * numSample) / deltaTime
+            self.bpm = @as(u16, @intFromFloat(15.0 * @as(f64, @floatFromInt(self.numSample)) / deltaTime));
 
             if (self.bpm > self.maxBpm) self.maxBpm = self.bpm;
         }
     }
 
-    pub fn drawKps(self: Self, buffer: []u8) !void {
+    pub fn drawKps(self: Self, buffer: []u8, comptime format: []const u8) !void {
         rl.drawText(
-            try fmt.bufPrintZ(buffer, "kps: {d}", .{self.kps}),
+            try fmt.bufPrintZ(buffer, format, .{self.kps}),
             self.x,
             self.y,
             self.size,
@@ -134,9 +139,9 @@ pub const Kps = struct {
         );
     }
 
-    pub fn drawMaxKps(self: Self, buffer: []u8, xShift: i32, yShift: i32) !void {
+    pub fn drawMaxKps(self: Self, buffer: []u8, comptime format: []const u8, xShift: i32, yShift: i32) !void {
         rl.drawText(
-            try fmt.bufPrintZ(buffer, "max: {d}", .{self.maxKps}),
+            try fmt.bufPrintZ(buffer, format, .{self.maxKps}),
             self.x + xShift,
             self.y + yShift,
             self.size,
@@ -144,9 +149,9 @@ pub const Kps = struct {
         );
     }
 
-    pub fn drawBpm(self: Self, buffer: []u8, xShift: i32, yShift: i32) !void {
+    pub fn drawBpm(self: Self, buffer: []u8, comptime format: []const u8, xShift: i32, yShift: i32) !void {
         rl.drawText(
-            try fmt.bufPrintZ(buffer, "bpm={d}", .{self.bpm}),
+            try fmt.bufPrintZ(buffer, format, .{self.bpm}),
             self.x + xShift,
             self.y + yShift,
             self.size,
@@ -154,9 +159,9 @@ pub const Kps = struct {
         );
     }
 
-    pub fn drawMaxBpm(self: Self, buffer: []u8, xShift: i32, yShift: i32) !void {
+    pub fn drawMaxBpm(self: Self, buffer: []u8, comptime format: []const u8, xShift: i32, yShift: i32) !void {
         rl.drawText(
-            try fmt.bufPrintZ(buffer, "max: {d}", .{self.maxBpm}),
+            try fmt.bufPrintZ(buffer, format, .{self.maxBpm}),
             self.x + xShift,
             self.y + yShift,
             self.size,
