@@ -188,7 +188,7 @@ pub const Chart = struct {
     }
 
     pub fn _debugOutline(self: Self) void {
-        rl.drawRectangleself.Lines(
+        rl.drawRectangleLines(
             @as(i32, @intFromFloat(self.x)),
             @as(i32, @intFromFloat(self.y)),
             @as(i32, @intFromFloat(self.width)),
