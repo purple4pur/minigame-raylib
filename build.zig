@@ -144,6 +144,7 @@ pub fn build(b: *std.Build) !void {
             rl.link(b, exe, target, optimize);
             exe.addModule("raylib", raylib);
             exe.addModule("raylib-math", raylib_math);
+            if (optimize != .Debug) exe.subsystem = .Windows;
 
             const install_cmd = b.addInstallArtifact(exe, .{});
             b.getInstallStep().dependOn(&install_cmd.step);
