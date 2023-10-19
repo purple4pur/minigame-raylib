@@ -85,7 +85,8 @@ pub fn main() !void {
     var kps = Kps.init(allocator, 4, 270, 110, 20, rl.Color.dark_gray);
     defer kps.deinit();
 
-    var chart = Chart.init(15, 170, 420, 150, 20);
+    var chart = Chart.init(allocator, 15, 170, 420, 150, 20);
+    defer chart.deinit();
 
     var buffer: [64]u8 = undefined;
 
@@ -111,9 +112,12 @@ pub fn main() !void {
         if (rl.isKeyPressed(rl.KeyboardKey.key_z)) try kps.getKeyPressed(time);
         if (rl.isKeyPressed(rl.KeyboardKey.key_x)) try kps.getKeyPressed(time);
 
+        try chart.receiveBpm(kps.bpm);
+
         k1Bar.update(1.2);
         k2Bar.update(1.2);
         kps.update(time);
+        chart.update(0.9);
 
         rl.beginDrawing();
         defer rl.endDrawing();
@@ -129,6 +133,6 @@ pub fn main() !void {
         try kps.drawBpm(&buffer, "bpm={}", 0, 30);
         try kps.drawMaxBpm(&buffer, "max: {}", 90, 30);
 
-        chart.drawChart();
+        chart.draw();
     }
 }
