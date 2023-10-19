@@ -4,6 +4,7 @@ const rl = @import("raylib");
 const rlg = @import("raylib-object-group.zig");
 const Bar = @import("keyoverlay-bar.zig").Bar;
 const Kps = @import("kps.zig").Kps;
+const Chart = @import("chart.zig").Chart;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -84,6 +85,8 @@ pub fn main() !void {
     var kps = Kps.init(allocator, 4, 270, 110, 20, rl.Color.dark_gray);
     defer kps.deinit();
 
+    var chart = Chart.init(15, 170, 420, 150, 20);
+
     var buffer: [64]u8 = undefined;
 
     while (!rl.windowShouldClose()) {
@@ -125,5 +128,7 @@ pub fn main() !void {
         try kps.drawMaxKps(&buffer, "max: {}", 90, 0);
         try kps.drawBpm(&buffer, "bpm={}", 0, 30);
         try kps.drawMaxBpm(&buffer, "max: {}", 90, 30);
+
+        chart.drawChart();
     }
 }
