@@ -1,4 +1,5 @@
 const std = @import("std");
+const fmt = std.fmt;
 const mem = std.mem;
 const rl = @import("raylib");
 const rlg = @import("raylib-object-group.zig");
@@ -10,7 +11,7 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    rl.initWindow(450, 340, "Speedtest [purple4pur]");
+    rl.initWindow(450, 400, "Speedtest [purple4pur]");
     defer rl.closeWindow();
 
     rl.setTargetFPS(360);
@@ -82,11 +83,68 @@ pub fn main() !void {
     var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.yellow);
     defer k2Bar.deinit();
 
-    var kps = Kps.init(allocator, 6, 270, 110, 20, rl.Color.dark_gray);
+    var kps = Kps.init(allocator, 4, 270, 110, 20, rl.Color.dark_gray);
     defer kps.deinit();
 
-    var chart = Chart.init(allocator, 15, 170, 420, 150, 20);
+    var chart = Chart.init(allocator, 15, 140, 420, 150, 20);
     defer chart.deinit();
+
+    // groupLegend
+    // -----------
+    //{{{
+    var groupLegend = rlg.ObjectGroup.init(allocator, 25, 305);
+    defer groupLegend.deinit();
+
+    try groupLegend.add(&.{ .object = &.{ .rectangle = .{
+        .x = 0,
+        .y = 0,
+        .width = 60,
+        .height = 20,
+    } }, .properties = &.{ .color = rl.Color.gold } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("BPM")))),
+    }, .properties = &.{
+        .x = 70,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("now:")))),
+    }, .properties = &.{
+        .x = 200,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var bpmNowText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    try groupLegend.add(&.{ .object = &bpmNowText, .properties = &.{
+        .x = 250,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("max:")))),
+    }, .properties = &.{
+        .x = 300,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var bpmMaxText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    try groupLegend.add(&.{ .object = &bpmMaxText, .properties = &.{
+        .x = 350,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+    //}}}
 
     var buffer: [64]u8 = undefined;
 
@@ -129,9 +187,10 @@ pub fn main() !void {
 
         try kps.drawKps(&buffer, "kps: {}");
         try kps.drawMaxKps(&buffer, "max: {}", 90, 0);
-        try kps.drawBpm(&buffer, "bpm={}", 0, 30);
-        try kps.drawMaxBpm(&buffer, "max: {}", 90, 30);
 
         chart.draw();
+        bpmNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.bpm});
+        bpmMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxBpm});
+        groupLegend.drawAll();
     }
 }
