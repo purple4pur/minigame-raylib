@@ -111,12 +111,12 @@ pub fn main() !void {
 
         if (rl.isKeyPressed(rl.KeyboardKey.key_z)) try kps.getKeyPressed(time);
         if (rl.isKeyPressed(rl.KeyboardKey.key_x)) try kps.getKeyPressed(time);
+        kps.refreshData(time);
         try chart.receiveBpm(kps.bpm);
 
         k1Bar.update(1.2);
         k2Bar.update(1.2);
         chart.update(0.8);
-        kps.refreshData(time);
 
         rl.beginDrawing();
         defer rl.endDrawing();
