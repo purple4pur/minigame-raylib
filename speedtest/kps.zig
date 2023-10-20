@@ -22,6 +22,8 @@ pub const Kps = struct {
     maxKps: u16 = 0,
     bpm: u16 = 0,
     maxBpm: u16 = 0,
+    avgBpm2s: u16 = 0,
+    maxAvgBpm2s: u16 = 0,
     avgBpm5s: u16 = 0,
     maxAvgBpm5s: u16 = 0,
 
@@ -123,7 +125,9 @@ pub const Kps = struct {
 
             var it = self.bpmPool.first;
             var next: ?*BpmQueue.Node = null;
-            var totalBpm: f32 = 0;
+            var bpmCountIn2s: u16 = 0;
+            var totalBpm2s: f32 = 0;
+            var totalBpm5s: f32 = 0;
             while (it) |node| : (it = next) {
                 next = node.next;
                 if (currentTime - node.data.time >= 5.0) {
@@ -132,11 +136,17 @@ pub const Kps = struct {
                     self.allocator.destroy(node);
                     continue;
                 }
-                totalBpm += @as(f32, @floatFromInt(node.data.bpm));
+                if (currentTime - node.data.time < 2.0) {
+                    totalBpm2s += @as(f32, @floatFromInt(node.data.bpm));
+                    bpmCountIn2s += 1;
+                }
+                totalBpm5s += @as(f32, @floatFromInt(node.data.bpm));
             }
 
             // calculate average bpm
-            self.avgBpm5s = @as(u16, @intFromFloat(totalBpm / @as(f32, @floatFromInt(self.bpmPool.len))));
+            self.avgBpm2s = @as(u16, @intFromFloat(totalBpm2s / @as(f32, @floatFromInt(bpmCountIn2s))));
+            if (self.avgBpm2s > self.maxAvgBpm2s) self.maxAvgBpm2s = self.avgBpm2s;
+            self.avgBpm5s = @as(u16, @intFromFloat(totalBpm5s / @as(f32, @floatFromInt(self.bpmPool.len))));
             if (self.avgBpm5s > self.maxAvgBpm5s) self.maxAvgBpm5s = self.avgBpm5s;
         }
     }

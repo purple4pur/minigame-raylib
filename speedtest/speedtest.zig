@@ -116,7 +116,7 @@ pub fn main() !void {
 
         k1Bar.update(1.2);
         k2Bar.update(1.2);
-        chart.update(0.8);
+        chart.update(0.7);
 
         rl.beginDrawing();
         defer rl.endDrawing();

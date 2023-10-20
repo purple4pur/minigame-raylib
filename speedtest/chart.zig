@@ -21,6 +21,7 @@ pub const Chart = struct {
     thickness: f32 = 2,
     bpms: [8]f32 = mem.zeroes([8]f32),
     bpmLines: LineQueue = LineQueue{},
+    avgBpm2sLines: LineQueue = LineQueue{},
     avgBpm5sLines: LineQueue = LineQueue{},
 
     const bpmWeights = [8]f32{ 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1 };
@@ -50,6 +51,11 @@ pub const Chart = struct {
             next = node.next;
             self.allocator.destroy(node);
         }
+        it = self.avgBpm2sLines.first;
+        while (it) |node| : (it = next) {
+            next = node.next;
+            self.allocator.destroy(node);
+        }
         it = self.avgBpm5sLines.first;
         while (it) |node| : (it = next) {
             next = node.next;
@@ -59,6 +65,7 @@ pub const Chart = struct {
     }
 
     pub fn receiveKps(self: *Self, kps: Kps) !void {
+        //{{{
         for (0..7) |i| self.bpms[i] = self.bpms[i + 1];
         self.bpms[7] = @as(f32, @floatFromInt(kps.bpm));
 
@@ -86,17 +93,32 @@ pub const Chart = struct {
         nodePtr.data = .{
             .from = .{
                 .x = 0,
+                .y = if (self.avgBpm2sLines.last) |last| last.data.to.y else 0,
+            },
+            .to = .{
+                .x = -1,
+                .y = @as(f32, @floatFromInt(kps.avgBpm2s)),
+            },
+        };
+        self.avgBpm2sLines.append(nodePtr);
+
+        nodePtr = try self.allocator.create(LineQueue.Node);
+        nodePtr.data = .{
+            .from = .{
+                .x = 0,
                 .y = if (self.avgBpm5sLines.last) |last| last.data.to.y else 0,
             },
             .to = .{
-                .x = -1, // -1 marks a new line
+                .x = -1,
                 .y = @as(f32, @floatFromInt(kps.avgBpm5s)),
             },
         };
         self.avgBpm5sLines.append(nodePtr);
+        //}}}
     }
 
     pub fn update(self: *Self, speed: f32) void {
+        //{{{
         const pixelSpeed: f32 = speed * 240.0 / @as(f32, @floatFromInt(rl.getFPS()));
 
         var it = self.bpmLines.first;
@@ -119,12 +141,26 @@ pub const Chart = struct {
             }
         }
 
+        it = self.avgBpm2sLines.first;
+        while (it) |node| : (it = next) {
+            next = node.next;
+            node.data.from.x += pixelSpeed;
+            if (node.data.to.x == -1) {
+                node.data.to.x = 0;
+            } else {
+                node.data.to.x += pixelSpeed;
+            }
+            if (node.data.to.x > self.width) {
+                self.avgBpm2sLines.remove(node);
+                self.allocator.destroy(node);
+            }
+        }
+
         it = self.avgBpm5sLines.first;
         while (it) |node| : (it = next) {
             next = node.next;
             node.data.from.x += pixelSpeed;
             if (node.data.to.x == -1) {
-                // a new line
                 node.data.to.x = 0;
             } else {
                 node.data.to.x += pixelSpeed;
@@ -134,11 +170,13 @@ pub const Chart = struct {
                 self.allocator.destroy(node);
             }
         }
+        //}}}
     }
 
     pub fn draw(self: Self) void {
         self.drawGrid();
         self.drawAvgBpm5s();
+        self.drawAvgBpm2s();
         self.drawBpm();
     }
 
@@ -218,7 +256,20 @@ pub const Chart = struct {
             }, .{
                 .x = self.x + self.width - node.data.to.x,
                 .y = self.y + self.height - self.scale(node.data.to.y),
-            }, self.thickness + 1, rl.Color.yellow);
+            }, self.thickness + 2, rl.Color.gold);
+        }
+    }
+
+    fn drawAvgBpm2s(self: Self) void {
+        var it = self.avgBpm2sLines.first;
+        while (it) |node| : (it = node.next) {
+            rl.drawLineEx(.{
+                .x = self.x + self.width - node.data.from.x,
+                .y = self.y + self.height - self.scale(node.data.from.y),
+            }, .{
+                .x = self.x + self.width - node.data.to.x,
+                .y = self.y + self.height - self.scale(node.data.to.y),
+            }, self.thickness + 2, rl.Color.sky_blue);
         }
     }
 
@@ -231,7 +282,7 @@ pub const Chart = struct {
             }, .{
                 .x = self.x + self.width - node.data.to.x,
                 .y = self.y + self.height - self.scale(node.data.to.y),
-            }, self.thickness + 1, rl.Color.sky_blue);
+            }, self.thickness + 2, rl.Color.purple);
         }
     }
 
