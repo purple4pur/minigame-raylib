@@ -115,8 +115,8 @@ pub fn main() !void {
 
         k1Bar.update(1.2);
         k2Bar.update(1.2);
-        kps.update(time);
         chart.update(0.8);
+        kps.refreshData(time);
 
         rl.beginDrawing();
         defer rl.endDrawing();
