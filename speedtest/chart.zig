@@ -21,7 +21,7 @@ pub const Chart = struct {
     lines: LineQueue = LineQueue{},
     bpms: [8]f32 = mem.zeroes([8]f32),
 
-    const bpmWeights = [8]f32{ 1, 1, 2, 2, 4, 5, 6, 7 };
+    const bpmWeights = [8]f32{ 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1 };
     const bpmWeightTotal = t: {
         var total: f32 = 0;
         for (bpmWeights) |w| total += w;
