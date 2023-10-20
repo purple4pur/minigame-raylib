@@ -5,6 +5,7 @@ const rl = @import("raylib");
 
 pub const Kps = struct {
     const TimeQueue = std.TailQueue(f64);
+    const BpmQueue = std.TailQueue(struct { bpm: u16, time: f64 });
 
     const Self = @This();
 
@@ -16,10 +17,13 @@ pub const Kps = struct {
     color: rl.Color,
 
     keyPool: TimeQueue = TimeQueue{},
+    bpmPool: BpmQueue = BpmQueue{},
     kps: u16 = 0,
     maxKps: u16 = 0,
     bpm: u16 = 0,
     maxBpm: u16 = 0,
+    avgBpm5s: u16 = 0,
+    maxAvgBpm5s: u16 = 0,
 
     pub fn init(allocator: mem.Allocator, numSample: u16, x: i32, y: i32, size: i32, color: rl.Color) Self {
         return Self{
@@ -33,11 +37,21 @@ pub const Kps = struct {
     }
 
     pub fn deinit(self: *Self) void {
-        var it = self.keyPool.first;
-        var next: ?*TimeQueue.Node = null;
-        while (it) |node| : (it = next) {
-            next = node.next;
-            self.allocator.destroy(node);
+        {
+            var it = self.keyPool.first;
+            var next: ?*TimeQueue.Node = null;
+            while (it) |node| : (it = next) {
+                next = node.next;
+                self.allocator.destroy(node);
+            }
+        }
+        {
+            var it = self.bpmPool.first;
+            var next: ?*BpmQueue.Node = null;
+            while (it) |node| : (it = next) {
+                next = node.next;
+                self.allocator.destroy(node);
+            }
         }
         self.* = undefined;
     }
@@ -49,17 +63,19 @@ pub const Kps = struct {
         self.keyPool.append(nodePtr);
     }
 
-    pub fn refreshData(self: *Self, currentTime: f64) void {
-        // throw away old timestamps
-        var it = self.keyPool.first;
-        var next: ?*TimeQueue.Node = null;
-        while (it) |node| : (it = next) {
-            next = node.next;
+    pub fn refreshData(self: *Self, currentTime: f64) !void {
+        {
+            // throw away old timestamps
+            var it = self.keyPool.first;
+            var next: ?*TimeQueue.Node = null;
+            while (it) |node| : (it = next) {
+                next = node.next;
 
-            // throw away nodes that are 10.0s earlier
-            if (currentTime - node.data < 10.0) break;
-            self.keyPool.remove(node);
-            self.allocator.destroy(node);
+                // throw away nodes that are 10.0s earlier
+                if (currentTime - node.data < 10.0) break;
+                self.keyPool.remove(node);
+                self.allocator.destroy(node);
+            }
         }
 
         // update kps/bpm etc
@@ -69,23 +85,23 @@ pub const Kps = struct {
         } else {
             var keyCountIn1s: u16 = 0;
             var keyCountIn1p8s: u16 = 0;
-            var bpmStampA: f64 = 0;
-            var bpmStampB: f64 = 0;
+            var timeA: f64 = 0;
+            var timeB: f64 = 0;
 
-            it = self.keyPool.last;
+            var it = self.keyPool.last;
             while (it) |node| : (it = node.prev) {
                 if (currentTime - node.data < 1.0) keyCountIn1s += 1;
                 if (currentTime - node.data < 1.8) keyCountIn1p8s += 1;
 
-                if (keyCountIn1p8s == 1) bpmStampA = node.data;
+                if (keyCountIn1p8s == 1) timeA = node.data;
                 // bpm needs [numSample+1] keystrokes to get delta time
-                if (keyCountIn1p8s == self.numSample + 1) bpmStampB = node.data;
+                if (keyCountIn1p8s == self.numSample + 1) timeB = node.data;
             }
 
             self.kps = keyCountIn1s;
             if (self.kps > self.maxKps) self.maxKps = self.kps;
 
-            if (bpmStampB == 0) {
+            if (timeB == 0) {
                 // not enough keystrokes to calculate bpm
                 self.bpm = 0;
             } else {
@@ -93,10 +109,35 @@ pub const Kps = struct {
                 //   if you hit a key per 0.25s (avg of 4 hits in a second), you get a bpm of 60.
                 // result in:
                 //   bpm = (15 * numSample) / deltaTime
-                const deltaTime = bpmStampA - bpmStampB;
+                const deltaTime = timeA - timeB;
                 self.bpm = @as(u16, @intFromFloat(15.0 * @as(f64, @floatFromInt(self.numSample)) / deltaTime));
                 if (self.bpm > self.maxBpm) self.maxBpm = self.bpm;
             }
+        }
+
+        {
+            // append current bpm to bpmPool
+            var nodePtr = try self.allocator.create(BpmQueue.Node);
+            nodePtr.data = .{ .bpm = self.bpm, .time = currentTime };
+            self.bpmPool.append(nodePtr);
+
+            var it = self.bpmPool.first;
+            var next: ?*BpmQueue.Node = null;
+            var totalBpm: f32 = 0;
+            while (it) |node| : (it = next) {
+                next = node.next;
+                if (currentTime - node.data.time >= 5.0) {
+                    // throw away nodes 5s earlier
+                    self.bpmPool.remove(node);
+                    self.allocator.destroy(node);
+                    continue;
+                }
+                totalBpm += @as(f32, @floatFromInt(node.data.bpm));
+            }
+
+            // calculate average bpm
+            self.avgBpm5s = @as(u16, @intFromFloat(totalBpm / @as(f32, @floatFromInt(self.bpmPool.len))));
+            if (self.avgBpm5s > self.maxAvgBpm5s) self.maxAvgBpm5s = self.avgBpm5s;
         }
     }
 

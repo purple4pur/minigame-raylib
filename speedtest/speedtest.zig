@@ -111,7 +111,7 @@ pub fn main() !void {
 
         if (rl.isKeyPressed(rl.KeyboardKey.key_z)) try kps.getKeyPressed(time);
         if (rl.isKeyPressed(rl.KeyboardKey.key_x)) try kps.getKeyPressed(time);
-        kps.refreshData(time);
+        try kps.refreshData(time);
         try chart.receiveBpm(kps.bpm);
 
         k1Bar.update(1.2);
