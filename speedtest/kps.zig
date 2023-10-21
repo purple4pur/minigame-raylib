@@ -10,11 +10,11 @@ pub const Kps = struct {
     const Self = @This();
 
     allocator: mem.Allocator,
-    numSample: u16, // how many keystrokes calculating bpm is based on
     x: i32,
     y: i32,
     size: i32,
     color: rl.Color,
+    numSample: u16, // how many keystrokes calculating bpm is based on
 
     keyPool: TimeQueue = TimeQueue{},
     bpmPool: BpmQueue = BpmQueue{},
@@ -27,14 +27,14 @@ pub const Kps = struct {
     avgBpm5s: u16 = 0,
     maxAvgBpm5s: u16 = 0,
 
-    pub fn init(allocator: mem.Allocator, numSample: u16, x: i32, y: i32, size: i32, color: rl.Color) Self {
+    pub fn init(allocator: mem.Allocator, x: i32, y: i32, size: i32, color: rl.Color, numSample: u16) Self {
         return Self{
             .allocator = allocator,
-            .numSample = numSample,
             .x = x,
             .y = y,
             .size = size,
             .color = color,
+            .numSample = numSample,
         };
     }
 
@@ -151,9 +151,9 @@ pub const Kps = struct {
         }
     }
 
-    pub fn drawKps(self: Self, buffer: []u8, comptime format: []const u8) !void {
+    pub fn drawKps(self: Self, comptime format: []const u8) !void {
         rl.drawText(
-            try fmt.bufPrintZ(buffer, format, .{self.kps}),
+            try fmt.allocPrintZ(self.allocator, format, .{self.kps}),
             self.x,
             self.y,
             self.size,
@@ -161,9 +161,9 @@ pub const Kps = struct {
         );
     }
 
-    pub fn drawMaxKps(self: Self, buffer: []u8, comptime format: []const u8, xShift: i32, yShift: i32) !void {
+    pub fn drawMaxKps(self: Self, comptime format: []const u8, xShift: i32, yShift: i32) !void {
         rl.drawText(
-            try fmt.bufPrintZ(buffer, format, .{self.maxKps}),
+            try fmt.allocPrintZ(self.allocator, format, .{self.maxKps}),
             self.x + xShift,
             self.y + yShift,
             self.size,
@@ -171,9 +171,9 @@ pub const Kps = struct {
         );
     }
 
-    pub fn drawBpm(self: Self, buffer: []u8, comptime format: []const u8, xShift: i32, yShift: i32) !void {
+    pub fn drawBpm(self: Self, comptime format: []const u8, xShift: i32, yShift: i32) !void {
         rl.drawText(
-            try fmt.bufPrintZ(buffer, format, .{self.bpm}),
+            try fmt.allocPrintZ(self.allocator, format, .{self.bpm}),
             self.x + xShift,
             self.y + yShift,
             self.size,
@@ -181,9 +181,9 @@ pub const Kps = struct {
         );
     }
 
-    pub fn drawMaxBpm(self: Self, buffer: []u8, comptime format: []const u8, xShift: i32, yShift: i32) !void {
+    pub fn drawMaxBpm(self: Self, comptime format: []const u8, xShift: i32, yShift: i32) !void {
         rl.drawText(
-            try fmt.bufPrintZ(buffer, format, .{self.maxBpm}),
+            try fmt.allocPrintZ(self.allocator, format, .{self.maxBpm}),
             self.x + xShift,
             self.y + yShift,
             self.size,

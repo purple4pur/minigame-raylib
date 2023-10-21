@@ -83,7 +83,7 @@ pub fn main() !void {
     var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.yellow);
     defer k2Bar.deinit();
 
-    var kps = Kps.init(allocator, 4, 270, 110, 20, rl.Color.dark_gray);
+    var kps = Kps.init(allocator, 270, 115, 20, rl.Color.dark_gray, 4);
     defer kps.deinit();
 
     var chart = Chart.init(allocator, 15, 140, 420, 150, 20);
@@ -246,8 +246,6 @@ pub fn main() !void {
     } });
     //}}}
 
-    var buffer: [64]u8 = undefined;
-
     while (!rl.windowShouldClose()) {
         const time = rl.getTime();
 
@@ -285,10 +283,11 @@ pub fn main() !void {
         groupK1.drawAll();
         groupK2.drawAll();
 
-        try kps.drawKps(&buffer, "kps: {}");
-        try kps.drawMaxKps(&buffer, "max: {}", 90, 0);
+        try kps.drawKps("kps: {}");
+        try kps.drawMaxKps("max: {}", 90, 0);
 
         chart.draw();
+
         bpmNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.bpm});
         bpmMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxBpm});
         avgBpm2sNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.avgBpm2s});
