@@ -92,7 +92,7 @@ pub fn main() !void {
     // groupLegend
     // -----------
     //{{{
-    var groupLegend = rlg.ObjectGroup.init(allocator, 25, 305);
+    var groupLegend = rlg.ObjectGroup.init(allocator, 20, 305);
     defer groupLegend.deinit();
 
     try groupLegend.add(&.{ .object = &.{ .rectangle = .{
@@ -114,7 +114,7 @@ pub fn main() !void {
     try groupLegend.add(&.{ .object = &.{
         .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("now:")))),
     }, .properties = &.{
-        .x = 200,
+        .x = 230,
         .y = 0,
         .size = 20,
         .color = rl.Color.dark_gray,
@@ -122,7 +122,7 @@ pub fn main() !void {
 
     var bpmNowText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
     try groupLegend.add(&.{ .object = &bpmNowText, .properties = &.{
-        .x = 250,
+        .x = 280,
         .y = 0,
         .size = 20,
         .color = rl.Color.dark_gray,
@@ -131,7 +131,7 @@ pub fn main() !void {
     try groupLegend.add(&.{ .object = &.{
         .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("max:")))),
     }, .properties = &.{
-        .x = 300,
+        .x = 330,
         .y = 0,
         .size = 20,
         .color = rl.Color.dark_gray,
@@ -139,8 +139,108 @@ pub fn main() !void {
 
     var bpmMaxText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
     try groupLegend.add(&.{ .object = &bpmMaxText, .properties = &.{
-        .x = 350,
+        .x = 380,
         .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupLegend.add(&.{ .object = &.{ .rectangle = .{
+        .x = 0,
+        .y = 30,
+        .width = 60,
+        .height = 20,
+    } }, .properties = &.{ .color = rl.Color.sky_blue } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("Avg. BPM (2s)")))),
+    }, .properties = &.{
+        .x = 70,
+        .y = 30,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("now:")))),
+    }, .properties = &.{
+        .x = 230,
+        .y = 30,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var avgBpm2sNowText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    try groupLegend.add(&.{ .object = &avgBpm2sNowText, .properties = &.{
+        .x = 280,
+        .y = 30,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("max:")))),
+    }, .properties = &.{
+        .x = 330,
+        .y = 30,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var avgBpm2sMaxText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    try groupLegend.add(&.{ .object = &avgBpm2sMaxText, .properties = &.{
+        .x = 380,
+        .y = 30,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupLegend.add(&.{ .object = &.{ .rectangle = .{
+        .x = 0,
+        .y = 60,
+        .width = 60,
+        .height = 20,
+    } }, .properties = &.{ .color = rl.Color.purple } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("Avg. BPM (5s)")))),
+    }, .properties = &.{
+        .x = 70,
+        .y = 60,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("now:")))),
+    }, .properties = &.{
+        .x = 230,
+        .y = 60,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var avgBpm5sNowText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    try groupLegend.add(&.{ .object = &avgBpm5sNowText, .properties = &.{
+        .x = 280,
+        .y = 60,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupLegend.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("max:")))),
+    }, .properties = &.{
+        .x = 330,
+        .y = 60,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var avgBpm5sMaxText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    try groupLegend.add(&.{ .object = &avgBpm5sMaxText, .properties = &.{
+        .x = 380,
+        .y = 60,
         .size = 20,
         .color = rl.Color.dark_gray,
     } });
@@ -191,6 +291,10 @@ pub fn main() !void {
         chart.draw();
         bpmNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.bpm});
         bpmMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxBpm});
+        avgBpm2sNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.avgBpm2s});
+        avgBpm2sMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxAvgBpm2s});
+        avgBpm5sNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.avgBpm5s});
+        avgBpm5sMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxAvgBpm5s});
         groupLegend.drawAll();
     }
 }
