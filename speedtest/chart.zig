@@ -18,8 +18,10 @@ pub const Chart = struct {
     h200: f32,
     h100: f32,
 
-    thickness: f32 = 2,
+    thickness: f32 = 4,
     bpms: [8]f32 = mem.zeroes([8]f32),
+    avgBpms2s: [8]f32 = mem.zeroes([8]f32),
+    avgBpms5s: [8]f32 = mem.zeroes([8]f32),
     bpmLines: LineQueue = LineQueue{},
     avgBpm2sLines: LineQueue = LineQueue{},
     avgBpm5sLines: LineQueue = LineQueue{},
@@ -68,7 +70,6 @@ pub const Chart = struct {
         //{{{
         for (0..7) |i| self.bpms[i] = self.bpms[i + 1];
         self.bpms[7] = @as(f32, @floatFromInt(kps.bpm));
-
         var nodePtr = try self.allocator.create(LineQueue.Node);
         nodePtr.data = .{
             .from = .{
@@ -89,6 +90,8 @@ pub const Chart = struct {
         };
         self.bpmLines.append(nodePtr);
 
+        for (0..7) |i| self.avgBpms2s[i] = self.avgBpms2s[i + 1];
+        self.avgBpms2s[7] = @as(f32, @floatFromInt(kps.avgBpm2s));
         nodePtr = try self.allocator.create(LineQueue.Node);
         nodePtr.data = .{
             .from = .{
@@ -97,11 +100,20 @@ pub const Chart = struct {
             },
             .to = .{
                 .x = -1,
-                .y = @as(f32, @floatFromInt(kps.avgBpm2s)),
+                .y = t: {
+                    var y: f32 = 0;
+                    for (self.avgBpms2s, bpmWeights) |b, w| {
+                        y += b * w;
+                    }
+                    y /= bpmWeightTotal;
+                    break :t y;
+                },
             },
         };
         self.avgBpm2sLines.append(nodePtr);
 
+        for (0..7) |i| self.avgBpms5s[i] = self.avgBpms5s[i + 1];
+        self.avgBpms5s[7] = @as(f32, @floatFromInt(kps.avgBpm5s));
         nodePtr = try self.allocator.create(LineQueue.Node);
         nodePtr.data = .{
             .from = .{
@@ -110,7 +122,14 @@ pub const Chart = struct {
             },
             .to = .{
                 .x = -1,
-                .y = @as(f32, @floatFromInt(kps.avgBpm5s)),
+                .y = t: {
+                    var y: f32 = 0;
+                    for (self.avgBpms5s, bpmWeights) |b, w| {
+                        y += b * w;
+                    }
+                    y /= bpmWeightTotal;
+                    break :t y;
+                },
             },
         };
         self.avgBpm5sLines.append(nodePtr);
@@ -189,7 +208,7 @@ pub const Chart = struct {
         }, .{
             .x = self.x + self.width,
             .y = self.y + self.height - self.h100,
-        }, self.thickness, rl.Color.light_gray);
+        }, 2, rl.Color.light_gray);
 
         // h100 text
         rl.drawText(
@@ -207,7 +226,7 @@ pub const Chart = struct {
         }, .{
             .x = self.x + self.width,
             .y = self.y + self.height - self.h200,
-        }, self.thickness, rl.Color.light_gray);
+        }, 2, rl.Color.light_gray);
 
         // h200 text
         rl.drawText(
@@ -225,7 +244,7 @@ pub const Chart = struct {
         }, .{
             .x = self.x + self.width,
             .y = self.y + self.height,
-        }, self.thickness, rl.Color.dark_gray);
+        }, 2, rl.Color.dark_gray);
 
         // h0 text
         rl.drawText(
@@ -242,8 +261,8 @@ pub const Chart = struct {
             .y = self.y,
         }, .{
             .x = self.x + self.width,
-            .y = self.y + self.height + (self.thickness / 2), // fill the bottom-right blank
-        }, self.thickness, rl.Color.dark_gray);
+            .y = self.y + self.height + 1, // fill the bottom-right blank
+        }, 2, rl.Color.dark_gray);
         //}}}
     }
 
@@ -256,7 +275,7 @@ pub const Chart = struct {
             }, .{
                 .x = self.x + self.width - node.data.to.x,
                 .y = self.y + self.height - self.scale(node.data.to.y),
-            }, self.thickness + 2, rl.Color.gold);
+            }, self.thickness, rl.Color.gold);
         }
     }
 
@@ -269,7 +288,7 @@ pub const Chart = struct {
             }, .{
                 .x = self.x + self.width - node.data.to.x,
                 .y = self.y + self.height - self.scale(node.data.to.y),
-            }, self.thickness + 2, rl.Color.sky_blue);
+            }, self.thickness, rl.Color.sky_blue);
         }
     }
 
@@ -282,7 +301,7 @@ pub const Chart = struct {
             }, .{
                 .x = self.x + self.width - node.data.to.x,
                 .y = self.y + self.height - self.scale(node.data.to.y),
-            }, self.thickness + 2, rl.Color.purple);
+            }, self.thickness, rl.Color.purple);
         }
     }
 
