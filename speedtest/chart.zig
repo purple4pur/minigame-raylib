@@ -208,9 +208,9 @@ pub const Chart = struct {
         }
 
         // auto chart scaling
-        if (maxHeight < 220) {
+        if (maxHeight < 230) {
             self.switchCoordTo(.c200);
-        } else if (maxHeight < 320) {
+        } else if (maxHeight < 340) {
             self.switchCoordTo(.c300);
         } else {
             self.switchCoordTo(.c400);

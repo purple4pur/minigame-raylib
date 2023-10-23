@@ -86,9 +86,9 @@ pub fn main() !void {
     try groupK2.add(&.{ .object = &k2Text, .properties = &k2TextProp });
     //}}}
 
-    var k1Bar = Bar.init(allocator, 0, 15, 400, 30, rl.Color.yellow);
+    var k1Bar = Bar.init(allocator, 0, 15, 400, 30, rl.Color.gold);
     defer k1Bar.deinit();
-    var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.yellow);
+    var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.gold);
     defer k2Bar.deinit();
 
     var kps = Kps.init(allocator, 270, 115, 20, rl.Color.dark_gray, 4);
@@ -286,7 +286,7 @@ pub fn main() !void {
                 }
 
                 if (rl.isKeyDown(k1Binding)) {
-                    k1BgProp.color = rl.Color.yellow;
+                    k1BgProp.color = rl.Color.gold;
                     try k1Bar.pressed();
                 } else {
                     k1BgProp.color = rl.Color.white;
@@ -294,7 +294,7 @@ pub fn main() !void {
                 }
 
                 if (rl.isKeyDown(k2Binding)) {
-                    k2BgProp.color = rl.Color.yellow;
+                    k2BgProp.color = rl.Color.gold;
                     try k2Bar.pressed();
                 } else {
                     k2BgProp.color = rl.Color.white;
