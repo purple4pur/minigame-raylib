@@ -7,6 +7,8 @@ const Bar = @import("keyoverlay-bar.zig").Bar;
 const Kps = @import("kps.zig").Kps;
 const Chart = @import("chart.zig").Chart;
 
+const homepageURL = "https://github.com/purple4pur/minigame-raylib/wiki/Homepage:-Speedtest";
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
@@ -310,32 +312,38 @@ pub fn main() !void {
     defer groupFooter.deinit();
 
     const helpButtonText = rlg.DrawableObject{ .text = @constCast("How to use?") };
+    const helpButtonX = 0;
+    const helpButtonY = 0;
     try groupFooter.add(&.{ .object = &helpButtonText, .properties = &.{
-        .x = 0,
-        .y = 0,
+        .x = helpButtonX,
+        .y = helpButtonY,
         .size = 10,
         .color = rl.Color.blue,
     } });
 
+    const helpButtonWidth = @as(f32, @floatFromInt(rl.measureText(helpButtonText.text, 10)));
     try groupFooter.add(&.{ .object = &.{ .rectangle = .{
-        .x = 0,
-        .y = 11,
-        .width = @as(f32, @floatFromInt(rl.measureText(helpButtonText.text, 10))),
+        .x = helpButtonX,
+        .y = helpButtonY + 11,
+        .width = helpButtonWidth,
         .height = 1,
     } }, .properties = &.{ .color = rl.Color.blue } });
 
     const homepageButtonText = rlg.DrawableObject{ .text = @constCast("Homepage") };
+    const homepageButtonX = 75;
+    const homepageButtonY = 0;
     try groupFooter.add(&.{ .object = &homepageButtonText, .properties = &.{
-        .x = 75,
-        .y = 0,
+        .x = homepageButtonX,
+        .y = homepageButtonY,
         .size = 10,
         .color = rl.Color.blue,
     } });
 
+    const homepageButtonWidth = @as(f32, @floatFromInt(rl.measureText(homepageButtonText.text, 10)));
     try groupFooter.add(&.{ .object = &.{ .rectangle = .{
-        .x = 75,
-        .y = 11,
-        .width = @as(f32, @floatFromInt(rl.measureText(homepageButtonText.text, 10))),
+        .x = homepageButtonX,
+        .y = homepageButtonY + 11,
+        .width = homepageButtonWidth,
         .height = 1,
     } }, .properties = &.{ .color = rl.Color.blue } });
 
@@ -349,7 +357,7 @@ pub fn main() !void {
     } });
     //}}}
 
-    const Screen = enum { speedtest, k1_binding, k2_binding };
+    const Screen = enum { speedtest, k1_binding, k2_binding, help };
     var currentScreen: Screen = .speedtest;
 
     while (!rl.windowShouldClose()) {
@@ -377,6 +385,28 @@ pub fn main() !void {
                 })) {
                     if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
                         currentScreen = .k2_binding;
+                    }
+                }
+
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupFooter.x)) + helpButtonX,
+                    .y = @as(f32, @floatFromInt(groupFooter.y)) + helpButtonY,
+                    .width = helpButtonWidth,
+                    .height = 12,
+                })) {
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        currentScreen = .help;
+                    }
+                }
+
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupFooter.x)) + homepageButtonX,
+                    .y = @as(f32, @floatFromInt(groupFooter.y)) + homepageButtonY,
+                    .width = homepageButtonWidth,
+                    .height = 12,
+                })) {
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        rl.openURL(homepageURL);
                     }
                 }
 
@@ -438,6 +468,20 @@ pub fn main() !void {
                         k2TextProp.y = 11;
                     }
                     currentScreen = .speedtest;
+                }
+                //}}}
+            },
+            .help => {
+                //{{{
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = 0,
+                    .y = 0,
+                    .width = screenWidth,
+                    .height = screenHeight,
+                })) {
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        currentScreen = .speedtest;
+                    }
                 }
                 //}}}
             },
@@ -504,6 +548,9 @@ pub fn main() !void {
                     rl.Color.ray_white,
                 );
                 //}}}
+            },
+            .help => {
+                rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.light_gray.fade(0.55));
             },
             else => {},
         }
