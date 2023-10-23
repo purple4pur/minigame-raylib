@@ -58,7 +58,7 @@ pub const Kps = struct {
         self.* = undefined;
     }
 
-    pub fn getKeyPressed(self: *Self, time: f64) !void {
+    pub fn catchKeyAt(self: *Self, time: f64) !void {
         // append a timestamp to keyPool
         var nodePtr = try self.allocator.create(TimeQueue.Node);
         nodePtr.data = time;
