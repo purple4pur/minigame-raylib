@@ -437,9 +437,27 @@ pub fn main() !void {
     } }, .properties = &.{ .color = rl.Color.blue } });
 
     try groupFooter.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast("@Purple4pur")),
+        .text = @as([:0]u8, @constCast("Made with")),
     }, .properties = &.{
-        .x = 350,
+        .x = 270,
+        .y = 0,
+        .size = 10,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupFooter.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("<3")),
+    }, .properties = &.{
+        .x = 323,
+        .y = 0,
+        .size = 10,
+        .color = rl.Color.red,
+    } });
+
+    try groupFooter.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("by @Purple4pur")),
+    }, .properties = &.{
+        .x = 337,
         .y = 0,
         .size = 10,
         .color = rl.Color.dark_gray,
