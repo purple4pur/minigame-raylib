@@ -347,7 +347,23 @@ pub fn main() !void {
 
         switch (currentScreen) {
             .k1_binding, .k2_binding => {
-                rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.gray.fade(0.6));
+                rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.light_gray.fade(0.55));
+                const prompt = "Press a key for " ++ if (currentScreen == .k1_binding) "K1 binding" else "K2 binding";
+                const promptWidth = rl.measureText(prompt, 20);
+                rl.drawRectangle(
+                    screenWidth / 2 - @divFloor(promptWidth, 2) - 10,
+                    screenHeight / 2 - 15,
+                    promptWidth + 20,
+                    30,
+                    rl.Color.dark_gray,
+                );
+                rl.drawText(
+                    prompt,
+                    screenWidth / 2 - @divFloor(promptWidth, 2),
+                    screenHeight / 2 - 10,
+                    20,
+                    rl.Color.ray_white,
+                );
             },
             else => {},
         }
