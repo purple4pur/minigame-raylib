@@ -7,12 +7,14 @@ const Bar = @import("keyoverlay-bar.zig").Bar;
 const Kps = @import("kps.zig").Kps;
 const Chart = @import("chart.zig").Chart;
 
+const homepageURL = "https://github.com/purple4pur/minigame-raylib/wiki/Homepage:-Speedtest";
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
     const screenWidth = 450;
-    const screenHeight = 400;
+    const screenHeight = 420;
     rl.initWindow(screenWidth, screenHeight, "Speedtest [purple4pur]");
     defer rl.closeWindow();
 
@@ -41,10 +43,11 @@ pub fn main() !void {
     } }, .properties = &k1BgProp });
 
     var k1Binding = rl.KeyboardKey.key_z;
-    var k1Text = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("z"))) };
+    var k1Text = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "Z", .{}) };
+    defer allocator.free(k1Text.text);
     var k1TextProp = rlg.ObjectProperties{
         .x = 20 - @divFloor(rl.measureText(k1Text.text, 20), 2),
-        .y = 9,
+        .y = 11,
         .size = 20,
         .color = rl.Color.dark_gray,
     };
@@ -74,23 +77,67 @@ pub fn main() !void {
     } }, .properties = &k2BgProp });
 
     var k2Binding = rl.KeyboardKey.key_x;
-    var k2Text = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("x"))) };
+    var k2Text = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "X", .{}) };
+    defer allocator.free(k2Text.text);
     var k2TextProp = rlg.ObjectProperties{
         .x = 20 - @divFloor(rl.measureText(k2Text.text, 20), 2),
-        .y = 9,
+        .y = 11,
         .size = 20,
         .color = rl.Color.dark_gray,
     };
     try groupK2.add(&.{ .object = &k2Text, .properties = &k2TextProp });
     //}}}
 
-    var k1Bar = Bar.init(allocator, 0, 15, 400, 30, rl.Color.yellow);
+    var k1Bar = Bar.init(allocator, 0, 15, 400, 30, rl.Color.gold);
     defer k1Bar.deinit();
-    var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.yellow);
+    var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.gold);
     defer k2Bar.deinit();
 
-    var kps = Kps.init(allocator, 270, 115, 20, rl.Color.dark_gray, 4);
+    var kps = Kps.init(allocator, 4);
     defer kps.deinit();
+
+    // groupKps
+    // -------
+    //{{{
+    var groupKps = rlg.ObjectGroup.init(allocator, 250, 113);
+    defer groupKps.deinit();
+
+    try groupKps.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("KPS:")),
+    }, .properties = &.{
+        .x = 0,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var kpsText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(kpsText.text);
+    try groupKps.add(&.{ .object = &kpsText, .properties = &.{
+        .x = 55,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupKps.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("max:")),
+    }, .properties = &.{
+        .x = 100,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var kpsMaxText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(kpsMaxText.text);
+    try groupKps.add(&.{ .object = &kpsMaxText, .properties = &.{
+        .x = 150,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+    //}}}
 
     var chart = Chart.init(allocator, 15, 140, 420, 150, 20);
     defer chart.deinit();
@@ -109,7 +156,7 @@ pub fn main() !void {
     } }, .properties = &.{ .color = rl.Color.gold } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("BPM")))),
+        .text = @as([:0]u8, @constCast("BPM")),
     }, .properties = &.{
         .x = 70,
         .y = 0,
@@ -118,7 +165,7 @@ pub fn main() !void {
     } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("now:")))),
+        .text = @as([:0]u8, @constCast("now:")),
     }, .properties = &.{
         .x = 230,
         .y = 0,
@@ -126,7 +173,8 @@ pub fn main() !void {
         .color = rl.Color.dark_gray,
     } });
 
-    var bpmNowText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    var bpmNowText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(bpmNowText.text);
     try groupLegend.add(&.{ .object = &bpmNowText, .properties = &.{
         .x = 280,
         .y = 0,
@@ -135,7 +183,7 @@ pub fn main() !void {
     } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("max:")))),
+        .text = @as([:0]u8, @constCast("max:")),
     }, .properties = &.{
         .x = 330,
         .y = 0,
@@ -143,7 +191,8 @@ pub fn main() !void {
         .color = rl.Color.dark_gray,
     } });
 
-    var bpmMaxText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    var bpmMaxText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(bpmMaxText.text);
     try groupLegend.add(&.{ .object = &bpmMaxText, .properties = &.{
         .x = 380,
         .y = 0,
@@ -159,7 +208,7 @@ pub fn main() !void {
     } }, .properties = &.{ .color = rl.Color.sky_blue } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("Avg. BPM (2s)")))),
+        .text = @as([:0]u8, @constCast("Avg. BPM (2s)")),
     }, .properties = &.{
         .x = 70,
         .y = 30,
@@ -168,7 +217,7 @@ pub fn main() !void {
     } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("now:")))),
+        .text = @as([:0]u8, @constCast("now:")),
     }, .properties = &.{
         .x = 230,
         .y = 30,
@@ -176,7 +225,8 @@ pub fn main() !void {
         .color = rl.Color.dark_gray,
     } });
 
-    var avgBpm2sNowText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    var avgBpm2sNowText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(avgBpm2sNowText.text);
     try groupLegend.add(&.{ .object = &avgBpm2sNowText, .properties = &.{
         .x = 280,
         .y = 30,
@@ -185,7 +235,7 @@ pub fn main() !void {
     } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("max:")))),
+        .text = @as([:0]u8, @constCast("max:")),
     }, .properties = &.{
         .x = 330,
         .y = 30,
@@ -193,7 +243,8 @@ pub fn main() !void {
         .color = rl.Color.dark_gray,
     } });
 
-    var avgBpm2sMaxText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    var avgBpm2sMaxText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(avgBpm2sMaxText.text);
     try groupLegend.add(&.{ .object = &avgBpm2sMaxText, .properties = &.{
         .x = 380,
         .y = 30,
@@ -209,7 +260,7 @@ pub fn main() !void {
     } }, .properties = &.{ .color = rl.Color.purple } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("Avg. BPM (5s)")))),
+        .text = @as([:0]u8, @constCast("Avg. BPM (5s)")),
     }, .properties = &.{
         .x = 70,
         .y = 60,
@@ -218,7 +269,7 @@ pub fn main() !void {
     } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("now:")))),
+        .text = @as([:0]u8, @constCast("now:")),
     }, .properties = &.{
         .x = 230,
         .y = 60,
@@ -226,7 +277,8 @@ pub fn main() !void {
         .color = rl.Color.dark_gray,
     } });
 
-    var avgBpm5sNowText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    var avgBpm5sNowText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(avgBpm5sNowText.text);
     try groupLegend.add(&.{ .object = &avgBpm5sNowText, .properties = &.{
         .x = 280,
         .y = 60,
@@ -235,7 +287,7 @@ pub fn main() !void {
     } });
 
     try groupLegend.add(&.{ .object = &.{
-        .text = @as([:0]u8, @constCast(@ptrCast(@alignCast("max:")))),
+        .text = @as([:0]u8, @constCast("max:")),
     }, .properties = &.{
         .x = 330,
         .y = 60,
@@ -243,7 +295,8 @@ pub fn main() !void {
         .color = rl.Color.dark_gray,
     } });
 
-    var avgBpm5sMaxText = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("0"))) };
+    var avgBpm5sMaxText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(avgBpm5sMaxText.text);
     try groupLegend.add(&.{ .object = &avgBpm5sMaxText, .properties = &.{
         .x = 380,
         .y = 60,
@@ -252,7 +305,166 @@ pub fn main() !void {
     } });
     //}}}
 
-    const Screen = enum { speedtest, k1_binding, k2_binding };
+    // groupBinding
+    // -----------
+    //{{{
+    var groupBinding = rlg.ObjectGroup.init(allocator, 0, 0);
+    defer groupBinding.deinit();
+
+    try groupBinding.add(&.{ .object = &.{ .rectangle = .{
+        .x = 0,
+        .y = 0,
+        .width = screenWidth,
+        .height = screenHeight,
+    } }, .properties = &.{ .color = rl.Color.light_gray.fade(0.55) } });
+
+    const promptK1 = "Press a key for K1 binding";
+    const promptK2 = "Press a key for K2 binding";
+    var bindingPrompt = rlg.DrawableObject{ .text = undefined };
+    var promptWidth: i32 = undefined;
+    var promptBG = rlg.DrawableObject{ .rectangle = .{
+        .x = undefined,
+        .y = screenHeight / 2 - 20,
+        .width = undefined,
+        .height = 40,
+    } };
+    try groupBinding.add(&.{ .object = &promptBG, .properties = &.{ .color = rl.Color.dark_gray } });
+
+    var promptProp = rlg.ObjectProperties{
+        .x = undefined,
+        .y = screenHeight / 2 - 10,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    };
+    try groupBinding.add(&.{ .object = &bindingPrompt, .properties = &promptProp });
+    //}}}
+
+    // groupHelp
+    // -----------
+    //{{{
+    var groupHelp = rlg.ObjectGroup.init(allocator, 0, 0);
+    defer groupHelp.deinit();
+
+    try groupHelp.add(&.{ .object = &.{ .rectangle = .{
+        .x = 0,
+        .y = 0,
+        .width = screenWidth,
+        .height = screenHeight,
+    } }, .properties = &.{ .color = rl.Color.light_gray.fade(0.55) } });
+
+    const groupHelpWidth = 380;
+    const groupHelpHeight = 180;
+
+    var helpMsgBG = rlg.DrawableObject{ .rectangle = .{
+        .x = screenWidth / 2 - groupHelpWidth / 2,
+        .y = screenHeight / 2 - groupHelpHeight / 2,
+        .width = groupHelpWidth,
+        .height = groupHelpHeight,
+    } };
+    try groupHelp.add(&.{ .object = &helpMsgBG, .properties = &.{ .color = rl.Color.dark_gray } });
+
+    const helpMsg0 = rlg.DrawableObject{ .text = @constCast("(Click anywhere to return)") };
+    const helpMsg1 = rlg.DrawableObject{ .text = @constCast("Hit the keys as fast and steady") };
+    const helpMsg2 = rlg.DrawableObject{ .text = @constCast("as possible. Click on keycap") };
+    const helpMsg3 = rlg.DrawableObject{ .text = @constCast("icons to change key bindings.") };
+
+    try groupHelp.add(&.{ .object = &helpMsg0, .properties = &.{
+        .x = screenWidth / 2 - groupHelpWidth / 2 + 20,
+        .y = screenHeight / 2 - groupHelpHeight / 2 + 20,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    } });
+    try groupHelp.add(&.{ .object = &helpMsg1, .properties = &.{
+        .x = screenWidth / 2 - groupHelpWidth / 2 + 20,
+        .y = screenHeight / 2 - groupHelpHeight / 2 + 70,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    } });
+    try groupHelp.add(&.{ .object = &helpMsg2, .properties = &.{
+        .x = screenWidth / 2 - groupHelpWidth / 2 + 20,
+        .y = screenHeight / 2 - groupHelpHeight / 2 + 100,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    } });
+    try groupHelp.add(&.{ .object = &helpMsg3, .properties = &.{
+        .x = screenWidth / 2 - groupHelpWidth / 2 + 20,
+        .y = screenHeight / 2 - groupHelpHeight / 2 + 130,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    } });
+    //}}}
+
+    // groupFooter
+    // -----------
+    //{{{
+    var groupFooter = rlg.ObjectGroup.init(allocator, 18, 395);
+    defer groupFooter.deinit();
+
+    const helpButtonText = rlg.DrawableObject{ .text = @constCast("How to use?") };
+    const helpButtonX = 0;
+    const helpButtonY = 0;
+    try groupFooter.add(&.{ .object = &helpButtonText, .properties = &.{
+        .x = helpButtonX,
+        .y = helpButtonY,
+        .size = 10,
+        .color = rl.Color.blue,
+    } });
+
+    const helpButtonWidth = @as(f32, @floatFromInt(rl.measureText(helpButtonText.text, 10)));
+    try groupFooter.add(&.{ .object = &.{ .rectangle = .{
+        .x = helpButtonX,
+        .y = helpButtonY + 11,
+        .width = helpButtonWidth,
+        .height = 1,
+    } }, .properties = &.{ .color = rl.Color.blue } });
+
+    const homepageButtonText = rlg.DrawableObject{ .text = @constCast("Homepage") };
+    const homepageButtonX = 75;
+    const homepageButtonY = 0;
+    try groupFooter.add(&.{ .object = &homepageButtonText, .properties = &.{
+        .x = homepageButtonX,
+        .y = homepageButtonY,
+        .size = 10,
+        .color = rl.Color.blue,
+    } });
+
+    const homepageButtonWidth = @as(f32, @floatFromInt(rl.measureText(homepageButtonText.text, 10)));
+    try groupFooter.add(&.{ .object = &.{ .rectangle = .{
+        .x = homepageButtonX,
+        .y = homepageButtonY + 11,
+        .width = homepageButtonWidth,
+        .height = 1,
+    } }, .properties = &.{ .color = rl.Color.blue } });
+
+    try groupFooter.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("Made with")),
+    }, .properties = &.{
+        .x = 270,
+        .y = 0,
+        .size = 10,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupFooter.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("<3")),
+    }, .properties = &.{
+        .x = 323,
+        .y = 0,
+        .size = 10,
+        .color = rl.Color.red,
+    } });
+
+    try groupFooter.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("by @Purple4pur")),
+    }, .properties = &.{
+        .x = 337,
+        .y = 0,
+        .size = 10,
+        .color = rl.Color.dark_gray,
+    } });
+    //}}}
+
+    const Screen = enum { speedtest, k1_binding, k2_binding, help };
     var currentScreen: Screen = .speedtest;
 
     while (!rl.windowShouldClose()) {
@@ -260,6 +472,7 @@ pub fn main() !void {
 
         switch (currentScreen) {
             .speedtest => {
+                //{{{
                 if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
                     .x = @as(f32, @floatFromInt(groupK1.x)) + k1Rectangle.rectangle.x,
                     .y = @as(f32, @floatFromInt(groupK1.y)) + k1Rectangle.rectangle.y,
@@ -282,8 +495,30 @@ pub fn main() !void {
                     }
                 }
 
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupFooter.x)) + helpButtonX,
+                    .y = @as(f32, @floatFromInt(groupFooter.y)) + helpButtonY,
+                    .width = helpButtonWidth,
+                    .height = 12,
+                })) {
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        currentScreen = .help;
+                    }
+                }
+
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupFooter.x)) + homepageButtonX,
+                    .y = @as(f32, @floatFromInt(groupFooter.y)) + homepageButtonY,
+                    .width = homepageButtonWidth,
+                    .height = 12,
+                })) {
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        rl.openURL(homepageURL);
+                    }
+                }
+
                 if (rl.isKeyDown(k1Binding)) {
-                    k1BgProp.color = rl.Color.yellow;
+                    k1BgProp.color = rl.Color.gold;
                     try k1Bar.pressed();
                 } else {
                     k1BgProp.color = rl.Color.white;
@@ -291,28 +526,71 @@ pub fn main() !void {
                 }
 
                 if (rl.isKeyDown(k2Binding)) {
-                    k2BgProp.color = rl.Color.yellow;
+                    k2BgProp.color = rl.Color.gold;
                     try k2Bar.pressed();
                 } else {
                     k2BgProp.color = rl.Color.white;
                     try k2Bar.released();
                 }
 
-                if (rl.isKeyPressed(k1Binding)) try kps.getKeyPressed(time);
-                if (rl.isKeyPressed(k2Binding)) try kps.getKeyPressed(time);
+                if (rl.isKeyPressed(k1Binding)) try kps.catchKeyAt(time);
+                if (rl.isKeyPressed(k2Binding)) try kps.catchKeyAt(time);
+                //}}}
             },
-            .k1_binding, .k2_binding => {
+            .k1_binding => {
+                //{{{
                 const key = rl.getKeyPressed();
                 if (isValidKeyCode(key)) {
-                    if (currentScreen == .k1_binding) {
-                        k1Binding = key;
-                        k1Text.text = @constCast(&[_:0]u8{@as(u8, @intCast(@intFromEnum(k1Binding))) - 'A' + 'a'});
+                    k1Binding = key;
+                    allocator.free(k1Text.text);
+                    k1Text.text = try keyString(allocator, key);
+                    if (isSmallText(key)) {
+                        k1TextProp.size = 10;
+                        k1TextProp.x = 20 - @divFloor(rl.measureText(k1Text.text, 10), 2);
+                        k1TextProp.y = 15;
                     } else {
-                        k2Binding = key;
-                        k2Text.text = @constCast(&[_:0]u8{@as(u8, @intCast(@intFromEnum(k2Binding))) - 'A' + 'a'});
+                        k1TextProp.size = 20;
+                        k1TextProp.x = 20 - @divFloor(rl.measureText(k1Text.text, 20), 2);
+                        k1TextProp.y = 11;
                     }
                     currentScreen = .speedtest;
                 }
+                //}}}
+            },
+            .k2_binding => {
+                //{{{
+                const key = rl.getKeyPressed();
+                if (isValidKeyCode(key)) {
+                    k2Binding = key;
+                    allocator.free(k2Text.text);
+                    k2Text.text = try keyString(allocator, key);
+                    k2TextProp.x = 20 - @divFloor(rl.measureText(k2Text.text, 20), 2);
+                    if (isSmallText(key)) {
+                        k2TextProp.size = 10;
+                        k2TextProp.x = 20 - @divFloor(rl.measureText(k2Text.text, 10), 2);
+                        k2TextProp.y = 15;
+                    } else {
+                        k2TextProp.size = 20;
+                        k2TextProp.x = 20 - @divFloor(rl.measureText(k2Text.text, 20), 2);
+                        k2TextProp.y = 11;
+                    }
+                    currentScreen = .speedtest;
+                }
+                //}}}
+            },
+            .help => {
+                //{{{
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = 0,
+                    .y = 0,
+                    .width = screenWidth,
+                    .height = screenHeight,
+                })) {
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        currentScreen = .speedtest;
+                    }
+                }
+                //}}}
             },
         }
 
@@ -332,11 +610,20 @@ pub fn main() !void {
         groupK1.drawAll();
         groupK2.drawAll();
 
-        try kps.drawKps("kps: {}");
-        try kps.drawMaxKps("max: {}", 90, 0);
+        allocator.free(kpsText.text);
+        allocator.free(kpsMaxText.text);
+        kpsText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.kps});
+        kpsMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxKps});
+        groupKps.drawAll();
 
         chart.draw();
 
+        allocator.free(bpmNowText.text);
+        allocator.free(bpmMaxText.text);
+        allocator.free(avgBpm2sNowText.text);
+        allocator.free(avgBpm2sMaxText.text);
+        allocator.free(avgBpm5sNowText.text);
+        allocator.free(avgBpm5sMaxText.text);
         bpmNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.bpm});
         bpmMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxBpm});
         avgBpm2sNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.avgBpm2s});
@@ -345,26 +632,20 @@ pub fn main() !void {
         avgBpm5sMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxAvgBpm5s});
         groupLegend.drawAll();
 
+        groupFooter.drawAll();
+
         switch (currentScreen) {
             .k1_binding, .k2_binding => {
-                rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.light_gray.fade(0.55));
-                const prompt = "Press a key for " ++ if (currentScreen == .k1_binding) "K1 binding" else "K2 binding";
-                const promptWidth = rl.measureText(prompt, 20);
-                rl.drawRectangle(
-                    screenWidth / 2 - @divFloor(promptWidth, 2) - 10,
-                    screenHeight / 2 - 15,
-                    promptWidth + 20,
-                    30,
-                    rl.Color.dark_gray,
-                );
-                rl.drawText(
-                    prompt,
-                    screenWidth / 2 - @divFloor(promptWidth, 2),
-                    screenHeight / 2 - 10,
-                    20,
-                    rl.Color.ray_white,
-                );
+                //{{{
+                bindingPrompt.text = @constCast(if (currentScreen == .k1_binding) promptK1 else promptK2);
+                promptWidth = rl.measureText(bindingPrompt.text, 20);
+                promptBG.rectangle.x = @as(f32, @floatFromInt(screenWidth / 2 - @divFloor(promptWidth, 2) - 15));
+                promptBG.rectangle.width = @as(f32, @floatFromInt(promptWidth + 30));
+                promptProp.x = screenWidth / 2 - @divFloor(promptWidth, 2);
+                groupBinding.drawAll();
+                //}}}
             },
+            .help => groupHelp.drawAll(),
             else => {},
         }
     }
@@ -372,7 +653,24 @@ pub fn main() !void {
 
 fn isValidKeyCode(key: rl.KeyboardKey) bool {
     //{{{
-    switch (key) {
+    return switch (key) {
+        .key_zero,
+        .key_one,
+        .key_two,
+        .key_three,
+        .key_four,
+        .key_five,
+        .key_six,
+        .key_seven,
+        .key_eight,
+        .key_nine,
+        .key_apostrophe,
+        .key_comma,
+        .key_minus,
+        .key_period,
+        .key_slash,
+        .key_semicolon,
+        .key_equal,
         .key_a,
         .key_b,
         .key_c,
@@ -399,8 +697,213 @@ fn isValidKeyCode(key: rl.KeyboardKey) bool {
         .key_x,
         .key_y,
         .key_z,
-        => return true,
-        else => return false,
-    }
+        .key_space,
+        .key_enter,
+        .key_tab,
+        .key_backspace,
+        .key_insert,
+        .key_delete,
+        .key_right,
+        .key_left,
+        .key_down,
+        .key_up,
+        .key_page_up,
+        .key_page_down,
+        .key_home,
+        .key_end,
+        //.key_caps_lock,
+        .key_f1,
+        .key_f2,
+        .key_f3,
+        .key_f4,
+        .key_f5,
+        .key_f6,
+        .key_f7,
+        .key_f8,
+        .key_f9,
+        .key_f10,
+        .key_f11,
+        //.key_f12,
+        .key_left_shift,
+        .key_left_control,
+        .key_left_alt,
+        .key_right_shift,
+        .key_right_control,
+        .key_right_alt,
+        .key_left_bracket,
+        .key_backslash,
+        .key_right_bracket,
+        .key_grave,
+        .key_kp_0,
+        .key_kp_1,
+        .key_kp_2,
+        .key_kp_3,
+        .key_kp_4,
+        .key_kp_5,
+        .key_kp_6,
+        .key_kp_7,
+        .key_kp_8,
+        .key_kp_9,
+        .key_kp_decimal,
+        .key_kp_divide,
+        .key_kp_multiply,
+        .key_kp_subtract,
+        .key_kp_add,
+        .key_kp_enter,
+        => true,
+        else => false,
+    };
+    //}}}
+}
+
+fn keyString(allocator: mem.Allocator, key: rl.KeyboardKey) ![:0]u8 {
+    //{{{
+    return switch (key) {
+        .key_zero,
+        .key_one,
+        .key_two,
+        .key_three,
+        .key_four,
+        .key_five,
+        .key_six,
+        .key_seven,
+        .key_eight,
+        .key_nine,
+        .key_apostrophe,
+        .key_comma,
+        .key_minus,
+        .key_period,
+        .key_slash,
+        .key_semicolon,
+        .key_equal,
+        .key_a,
+        .key_b,
+        .key_c,
+        .key_d,
+        .key_e,
+        .key_f,
+        .key_g,
+        .key_h,
+        .key_i,
+        .key_j,
+        .key_k,
+        .key_l,
+        .key_m,
+        .key_n,
+        .key_o,
+        .key_p,
+        .key_q,
+        .key_r,
+        .key_s,
+        .key_t,
+        .key_u,
+        .key_v,
+        .key_w,
+        .key_x,
+        .key_y,
+        .key_z,
+        .key_left_bracket,
+        .key_backslash,
+        .key_right_bracket,
+        .key_grave,
+        => |raw| try fmt.allocPrintZ(allocator, "{s}", .{&[_]u8{@as(u8, @intCast(@intFromEnum(raw)))}}),
+        .key_space => try fmt.allocPrintZ(allocator, "SPACE", .{}),
+        .key_enter => try fmt.allocPrintZ(allocator, "ENTER", .{}),
+        .key_tab => try fmt.allocPrintZ(allocator, "TAB", .{}),
+        .key_backspace => try fmt.allocPrintZ(allocator, "BS", .{}),
+        .key_insert => try fmt.allocPrintZ(allocator, "INS.", .{}),
+        .key_delete => try fmt.allocPrintZ(allocator, "DEL.", .{}),
+        .key_right => try fmt.allocPrintZ(allocator, "RIGHT", .{}),
+        .key_left => try fmt.allocPrintZ(allocator, "LEFT", .{}),
+        .key_down => try fmt.allocPrintZ(allocator, "DOWN", .{}),
+        .key_up => try fmt.allocPrintZ(allocator, "UP", .{}),
+        .key_page_up => try fmt.allocPrintZ(allocator, "PGUP", .{}),
+        .key_page_down => try fmt.allocPrintZ(allocator, "PGDN", .{}),
+        .key_home => try fmt.allocPrintZ(allocator, "HOME", .{}),
+        .key_end => try fmt.allocPrintZ(allocator, "END", .{}),
+        //.key_caps_lock => try fmt.allocPrintZ(allocator, "CA.LK", .{}),
+        .key_f1 => try fmt.allocPrintZ(allocator, "F1", .{}),
+        .key_f2 => try fmt.allocPrintZ(allocator, "F2", .{}),
+        .key_f3 => try fmt.allocPrintZ(allocator, "F3", .{}),
+        .key_f4 => try fmt.allocPrintZ(allocator, "F4", .{}),
+        .key_f5 => try fmt.allocPrintZ(allocator, "F5", .{}),
+        .key_f6 => try fmt.allocPrintZ(allocator, "F6", .{}),
+        .key_f7 => try fmt.allocPrintZ(allocator, "F7", .{}),
+        .key_f8 => try fmt.allocPrintZ(allocator, "F8", .{}),
+        .key_f9 => try fmt.allocPrintZ(allocator, "F9", .{}),
+        .key_f10 => try fmt.allocPrintZ(allocator, "F10", .{}),
+        .key_f11 => try fmt.allocPrintZ(allocator, "F11", .{}),
+        //.key_f12 => try fmt.allocPrintZ(allocator, "F12", .{}),
+        .key_left_shift => try fmt.allocPrintZ(allocator, "L.SFT", .{}),
+        .key_left_control => try fmt.allocPrintZ(allocator, "L.CTL", .{}),
+        .key_left_alt => try fmt.allocPrintZ(allocator, "L.ALT", .{}),
+        .key_right_shift => try fmt.allocPrintZ(allocator, "R.SFT", .{}),
+        .key_right_control => try fmt.allocPrintZ(allocator, "R.CTL", .{}),
+        .key_right_alt => try fmt.allocPrintZ(allocator, "R.ALT", .{}),
+        .key_kp_0 => try fmt.allocPrintZ(allocator, "Num0", .{}),
+        .key_kp_1 => try fmt.allocPrintZ(allocator, "Num1", .{}),
+        .key_kp_2 => try fmt.allocPrintZ(allocator, "Num2", .{}),
+        .key_kp_3 => try fmt.allocPrintZ(allocator, "Num3", .{}),
+        .key_kp_4 => try fmt.allocPrintZ(allocator, "Num4", .{}),
+        .key_kp_5 => try fmt.allocPrintZ(allocator, "Num5", .{}),
+        .key_kp_6 => try fmt.allocPrintZ(allocator, "Num6", .{}),
+        .key_kp_7 => try fmt.allocPrintZ(allocator, "Num7", .{}),
+        .key_kp_8 => try fmt.allocPrintZ(allocator, "Num8", .{}),
+        .key_kp_9 => try fmt.allocPrintZ(allocator, "Num9", .{}),
+        .key_kp_decimal => try fmt.allocPrintZ(allocator, "Num.", .{}),
+        .key_kp_divide => try fmt.allocPrintZ(allocator, "Num/", .{}),
+        .key_kp_multiply => try fmt.allocPrintZ(allocator, "Num*", .{}),
+        .key_kp_subtract => try fmt.allocPrintZ(allocator, "Num-", .{}),
+        .key_kp_add => try fmt.allocPrintZ(allocator, "Num+", .{}),
+        .key_kp_enter => try fmt.allocPrintZ(allocator, "NumE.", .{}),
+        else => unreachable,
+    };
+    //}}}
+}
+
+fn isSmallText(key: rl.KeyboardKey) bool {
+    //{{{
+    return switch (key) {
+        .key_space,
+        .key_enter,
+        .key_tab,
+        .key_insert,
+        .key_delete,
+        .key_right,
+        .key_left,
+        .key_down,
+        .key_page_up,
+        .key_page_down,
+        .key_home,
+        .key_end,
+        //.key_caps_lock,
+        .key_f10,
+        .key_f11,
+        //.key_f12,
+        .key_left_shift,
+        .key_left_control,
+        .key_left_alt,
+        .key_right_shift,
+        .key_right_control,
+        .key_right_alt,
+        .key_kp_0,
+        .key_kp_1,
+        .key_kp_2,
+        .key_kp_3,
+        .key_kp_4,
+        .key_kp_5,
+        .key_kp_6,
+        .key_kp_7,
+        .key_kp_8,
+        .key_kp_9,
+        .key_kp_decimal,
+        .key_kp_divide,
+        .key_kp_multiply,
+        .key_kp_subtract,
+        .key_kp_add,
+        .key_kp_enter,
+        => true,
+        else => false,
+    };
     //}}}
 }
