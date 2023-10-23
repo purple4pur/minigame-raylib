@@ -6,6 +6,7 @@ const Kps = @import("kps.zig").Kps;
 pub const Chart = struct {
     const Line = struct { from: rl.Vector2, to: rl.Vector2 };
     const LineQueue = std.TailQueue(Line);
+    const CoordMode = enum { c200, c300, c400 };
 
     const Self = @This();
 
@@ -25,6 +26,9 @@ pub const Chart = struct {
     bpmLines: LineQueue = LineQueue{},
     avgBpm2sLines: LineQueue = LineQueue{},
     avgBpm5sLines: LineQueue = LineQueue{},
+    coordMode: CoordMode = .c200,
+    h400: f32 = 0,
+    h300: f32 = 0,
 
     const bpmWeights = [8]f32{ 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1 };
     const bpmWeightTotal = t: {
@@ -47,6 +51,7 @@ pub const Chart = struct {
     }
 
     pub fn deinit(self: *Self) void {
+        //{{{
         var it = self.bpmLines.first;
         var next: ?*LineQueue.Node = null;
         while (it) |node| : (it = next) {
@@ -64,6 +69,7 @@ pub const Chart = struct {
             self.allocator.destroy(node);
         }
         self.* = undefined;
+        //}}}
     }
 
     pub fn receiveKps(self: *Self, kps: Kps) !void {
@@ -139,6 +145,7 @@ pub const Chart = struct {
     pub fn update(self: *Self, speed: f32) void {
         //{{{
         const pixelSpeed: f32 = speed * 240.0 / @as(f32, @floatFromInt(rl.getFPS()));
+        var maxHeight: f32 = 0;
 
         var it = self.bpmLines.first;
         var next: ?*LineQueue.Node = null;
@@ -157,6 +164,10 @@ pub const Chart = struct {
                 // this line is out of bounds
                 self.bpmLines.remove(node);
                 self.allocator.destroy(node);
+            } else {
+                // record max height for auto chart scaling
+                if (node.data.from.y > maxHeight) maxHeight = node.data.from.y;
+                if (node.data.to.y > maxHeight) maxHeight = node.data.to.y;
             }
         }
 
@@ -172,6 +183,9 @@ pub const Chart = struct {
             if (node.data.to.x > self.width) {
                 self.avgBpm2sLines.remove(node);
                 self.allocator.destroy(node);
+            } else {
+                if (node.data.from.y > maxHeight) maxHeight = node.data.from.y;
+                if (node.data.to.y > maxHeight) maxHeight = node.data.to.y;
             }
         }
 
@@ -187,7 +201,19 @@ pub const Chart = struct {
             if (node.data.to.x > self.width) {
                 self.avgBpm5sLines.remove(node);
                 self.allocator.destroy(node);
+            } else {
+                if (node.data.from.y > maxHeight) maxHeight = node.data.from.y;
+                if (node.data.to.y > maxHeight) maxHeight = node.data.to.y;
             }
+        }
+
+        // auto chart scaling
+        if (maxHeight < 220) {
+            self.switchCoordTo(.c200);
+        } else if (maxHeight < 320) {
+            self.switchCoordTo(.c300);
+        } else {
+            self.switchCoordTo(.c400);
         }
         //}}}
     }
@@ -201,23 +227,25 @@ pub const Chart = struct {
 
     fn drawGrid(self: Self) void {
         //{{{
-        // h100
-        rl.drawLineEx(.{
-            .x = self.x,
-            .y = self.y + self.height - self.h100,
-        }, .{
-            .x = self.x + self.width,
-            .y = self.y + self.height - self.h100,
-        }, 2, rl.Color.light_gray);
+        if (self.coordMode == .c200 or self.coordMode == .c300) {
+            // h100
+            rl.drawLineEx(.{
+                .x = self.x,
+                .y = self.y + self.height - self.h100,
+            }, .{
+                .x = self.x + self.width,
+                .y = self.y + self.height - self.h100,
+            }, 2, rl.Color.light_gray);
 
-        // h100 text
-        rl.drawText(
-            "100",
-            @as(i32, @intFromFloat(self.x + 2)),
-            @as(i32, @intFromFloat(self.y + self.height - self.h100 - self.fontSize - 2)),
-            @as(i32, @intFromFloat(self.fontSize)),
-            rl.Color.light_gray,
-        );
+            // h100 text
+            rl.drawText(
+                "100",
+                @as(i32, @intFromFloat(self.x + 2)),
+                @as(i32, @intFromFloat(self.y + self.height - self.h100 - self.fontSize - 2)),
+                @as(i32, @intFromFloat(self.fontSize)),
+                rl.Color.light_gray,
+            );
+        }
 
         // h200
         rl.drawLineEx(.{
@@ -236,6 +264,46 @@ pub const Chart = struct {
             @as(i32, @intFromFloat(self.fontSize)),
             rl.Color.light_gray,
         );
+
+        if (self.coordMode == .c300) {
+            // h300
+            rl.drawLineEx(.{
+                .x = self.x,
+                .y = self.y + self.height - self.h300,
+            }, .{
+                .x = self.x + self.width,
+                .y = self.y + self.height - self.h300,
+            }, 2, rl.Color.light_gray);
+
+            // h300 text
+            rl.drawText(
+                "300",
+                @as(i32, @intFromFloat(self.x + 2)),
+                @as(i32, @intFromFloat(self.y + self.height - self.h300 - self.fontSize - 2)),
+                @as(i32, @intFromFloat(self.fontSize)),
+                rl.Color.light_gray,
+            );
+        }
+
+        if (self.coordMode == .c400) {
+            // h400
+            rl.drawLineEx(.{
+                .x = self.x,
+                .y = self.y + self.height - self.h400,
+            }, .{
+                .x = self.x + self.width,
+                .y = self.y + self.height - self.h400,
+            }, 2, rl.Color.light_gray);
+
+            // h400 text
+            rl.drawText(
+                "400",
+                @as(i32, @intFromFloat(self.x + 2)),
+                @as(i32, @intFromFloat(self.y + self.height - self.h400 - self.fontSize - 2)),
+                @as(i32, @intFromFloat(self.fontSize)),
+                rl.Color.light_gray,
+            );
+        }
 
         // bottom (h0)
         rl.drawLineEx(.{
@@ -267,6 +335,7 @@ pub const Chart = struct {
     }
 
     fn drawBpm(self: Self) void {
+        //{{{
         var it = self.bpmLines.first;
         while (it) |node| : (it = node.next) {
             rl.drawLineEx(.{
@@ -277,9 +346,11 @@ pub const Chart = struct {
                 .y = self.y + self.height - self.scale(node.data.to.y),
             }, self.thickness, rl.Color.gold);
         }
+        //}}}
     }
 
     fn drawAvgBpm2s(self: Self) void {
+        //{{{
         var it = self.avgBpm2sLines.first;
         while (it) |node| : (it = node.next) {
             rl.drawLineEx(.{
@@ -290,9 +361,11 @@ pub const Chart = struct {
                 .y = self.y + self.height - self.scale(node.data.to.y),
             }, self.thickness, rl.Color.sky_blue);
         }
+        //}}}
     }
 
     fn drawAvgBpm5s(self: Self) void {
+        //{{{
         var it = self.avgBpm5sLines.first;
         while (it) |node| : (it = node.next) {
             rl.drawLineEx(.{
@@ -303,10 +376,34 @@ pub const Chart = struct {
                 .y = self.y + self.height - self.scale(node.data.to.y),
             }, self.thickness, rl.Color.purple);
         }
+        //}}}
     }
 
     fn scale(self: Self, height: f32) f32 {
         return height * self.h200 / 200;
+    }
+
+    fn switchCoordTo(self: *Self, coord: CoordMode) void {
+        //{{{
+        switch (coord) {
+            .c200 => {
+                self.h200 = self.height - self.fontSize - 2;
+                self.h100 = (self.height - self.fontSize - 2) / 2;
+                self.coordMode = .c200;
+            },
+            .c300 => {
+                self.h300 = self.height - self.fontSize - 2;
+                self.h200 = (self.height - self.fontSize - 2) * 2 / 3;
+                self.h100 = (self.height - self.fontSize - 2) / 3;
+                self.coordMode = .c300;
+            },
+            .c400 => {
+                self.h400 = self.height - self.fontSize - 2;
+                self.h200 = (self.height - self.fontSize - 2) / 2;
+                self.coordMode = .c400;
+            },
+        }
+        //}}}
     }
 
     pub fn _debugOutline(self: Self) void {
