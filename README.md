@@ -14,4 +14,8 @@ To list all build targets:
 zig build -l
 ```
 
-Track progress: purple4pur/minigame-raylib#2. Please checkout dev branch for latest changes!
+Track progress: purple4pur/minigame-raylib#2. Checkout dev branch for latest changes!
+
+## License
+
+MIT. Please read `/licenses` folder for used/related projects' licenses!
