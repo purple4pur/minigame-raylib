@@ -41,10 +41,11 @@ pub fn main() !void {
     } }, .properties = &k1BgProp });
 
     var k1Binding = rl.KeyboardKey.key_z;
-    var k1Text = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("z"))) };
+    var k1Text = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "Z", .{}) };
+    defer allocator.free(k1Text.text);
     var k1TextProp = rlg.ObjectProperties{
         .x = 20 - @divFloor(rl.measureText(k1Text.text, 20), 2),
-        .y = 9,
+        .y = 11,
         .size = 20,
         .color = rl.Color.dark_gray,
     };
@@ -74,10 +75,11 @@ pub fn main() !void {
     } }, .properties = &k2BgProp });
 
     var k2Binding = rl.KeyboardKey.key_x;
-    var k2Text = rlg.DrawableObject{ .text = @constCast(@ptrCast(@alignCast("x"))) };
+    var k2Text = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "X", .{}) };
+    defer allocator.free(k2Text.text);
     var k2TextProp = rlg.ObjectProperties{
         .x = 20 - @divFloor(rl.measureText(k2Text.text, 20), 2),
-        .y = 9,
+        .y = 11,
         .size = 20,
         .color = rl.Color.dark_gray,
     };
@@ -260,6 +262,7 @@ pub fn main() !void {
 
         switch (currentScreen) {
             .speedtest => {
+                //{{{
                 if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
                     .x = @as(f32, @floatFromInt(groupK1.x)) + k1Rectangle.rectangle.x,
                     .y = @as(f32, @floatFromInt(groupK1.y)) + k1Rectangle.rectangle.y,
@@ -300,19 +303,48 @@ pub fn main() !void {
 
                 if (rl.isKeyPressed(k1Binding)) try kps.getKeyPressed(time);
                 if (rl.isKeyPressed(k2Binding)) try kps.getKeyPressed(time);
+                //}}}
             },
-            .k1_binding, .k2_binding => {
+            .k1_binding => {
+                //{{{
                 const key = rl.getKeyPressed();
                 if (isValidKeyCode(key)) {
-                    if (currentScreen == .k1_binding) {
-                        k1Binding = key;
-                        k1Text.text = @constCast(&[_:0]u8{@as(u8, @intCast(@intFromEnum(k1Binding))) - 'A' + 'a'});
+                    k1Binding = key;
+                    allocator.free(k1Text.text);
+                    k1Text.text = try keyString(allocator, key);
+                    if (isSmallText(key)) {
+                        k1TextProp.size = 10;
+                        k1TextProp.x = 20 - @divFloor(rl.measureText(k1Text.text, 10), 2);
+                        k1TextProp.y = 15;
                     } else {
-                        k2Binding = key;
-                        k2Text.text = @constCast(&[_:0]u8{@as(u8, @intCast(@intFromEnum(k2Binding))) - 'A' + 'a'});
+                        k1TextProp.size = 20;
+                        k1TextProp.x = 20 - @divFloor(rl.measureText(k1Text.text, 20), 2);
+                        k1TextProp.y = 11;
                     }
                     currentScreen = .speedtest;
                 }
+                //}}}
+            },
+            .k2_binding => {
+                //{{{
+                const key = rl.getKeyPressed();
+                if (isValidKeyCode(key)) {
+                    k2Binding = key;
+                    allocator.free(k2Text.text);
+                    k2Text.text = try keyString(allocator, key);
+                    k2TextProp.x = 20 - @divFloor(rl.measureText(k2Text.text, 20), 2);
+                    if (isSmallText(key)) {
+                        k2TextProp.size = 10;
+                        k2TextProp.x = 20 - @divFloor(rl.measureText(k2Text.text, 10), 2);
+                        k2TextProp.y = 15;
+                    } else {
+                        k2TextProp.size = 20;
+                        k2TextProp.x = 20 - @divFloor(rl.measureText(k2Text.text, 20), 2);
+                        k2TextProp.y = 11;
+                    }
+                    currentScreen = .speedtest;
+                }
+                //}}}
             },
         }
 
@@ -347,6 +379,7 @@ pub fn main() !void {
 
         switch (currentScreen) {
             .k1_binding, .k2_binding => {
+                //{{{
                 rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.light_gray.fade(0.55));
                 const prompt = "Press a key for " ++ if (currentScreen == .k1_binding) "K1 binding" else "K2 binding";
                 const promptWidth = rl.measureText(prompt, 20);
@@ -364,6 +397,7 @@ pub fn main() !void {
                     20,
                     rl.Color.ray_white,
                 );
+                //}}}
             },
             else => {},
         }
@@ -372,7 +406,24 @@ pub fn main() !void {
 
 fn isValidKeyCode(key: rl.KeyboardKey) bool {
     //{{{
-    switch (key) {
+    return switch (key) {
+        .key_zero,
+        .key_one,
+        .key_two,
+        .key_three,
+        .key_four,
+        .key_five,
+        .key_six,
+        .key_seven,
+        .key_eight,
+        .key_nine,
+        .key_apostrophe,
+        .key_comma,
+        .key_minus,
+        .key_period,
+        .key_slash,
+        .key_semicolon,
+        .key_equal,
         .key_a,
         .key_b,
         .key_c,
@@ -399,8 +450,157 @@ fn isValidKeyCode(key: rl.KeyboardKey) bool {
         .key_x,
         .key_y,
         .key_z,
-        => return true,
-        else => return false,
-    }
+        .key_space,
+        .key_enter,
+        .key_tab,
+        .key_backspace,
+        .key_insert,
+        .key_delete,
+        .key_right,
+        .key_left,
+        .key_down,
+        .key_up,
+        .key_page_up,
+        .key_page_down,
+        .key_home,
+        .key_end,
+        //.key_caps_lock,
+        .key_f1,
+        .key_f2,
+        .key_f3,
+        .key_f4,
+        .key_f5,
+        .key_f6,
+        .key_f7,
+        .key_f8,
+        .key_f9,
+        .key_f10,
+        .key_f11,
+        //.key_f12,
+        .key_left_shift,
+        .key_left_control,
+        .key_left_alt,
+        .key_right_shift,
+        .key_right_control,
+        .key_right_alt,
+        => true,
+        else => false,
+    };
+    //}}}
+}
+
+fn keyString(allocator: mem.Allocator, key: rl.KeyboardKey) ![:0]u8 {
+    //{{{
+    return switch (key) {
+        .key_zero,
+        .key_one,
+        .key_two,
+        .key_three,
+        .key_four,
+        .key_five,
+        .key_six,
+        .key_seven,
+        .key_eight,
+        .key_nine,
+        .key_apostrophe,
+        .key_comma,
+        .key_minus,
+        .key_period,
+        .key_slash,
+        .key_semicolon,
+        .key_equal,
+        .key_a,
+        .key_b,
+        .key_c,
+        .key_d,
+        .key_e,
+        .key_f,
+        .key_g,
+        .key_h,
+        .key_i,
+        .key_j,
+        .key_k,
+        .key_l,
+        .key_m,
+        .key_n,
+        .key_o,
+        .key_p,
+        .key_q,
+        .key_r,
+        .key_s,
+        .key_t,
+        .key_u,
+        .key_v,
+        .key_w,
+        .key_x,
+        .key_y,
+        .key_z,
+        => |raw| try fmt.allocPrintZ(allocator, "{s}", .{&[_]u8{@as(u8, @intCast(@intFromEnum(raw)))}}),
+        .key_space => try fmt.allocPrintZ(allocator, "SPACE", .{}),
+        .key_enter => try fmt.allocPrintZ(allocator, "ENTER", .{}),
+        .key_tab => try fmt.allocPrintZ(allocator, "TAB", .{}),
+        .key_backspace => try fmt.allocPrintZ(allocator, "BS", .{}),
+        .key_insert => try fmt.allocPrintZ(allocator, "INS.", .{}),
+        .key_delete => try fmt.allocPrintZ(allocator, "DEL.", .{}),
+        .key_right => try fmt.allocPrintZ(allocator, "RIGHT", .{}),
+        .key_left => try fmt.allocPrintZ(allocator, "LEFT", .{}),
+        .key_down => try fmt.allocPrintZ(allocator, "DOWN", .{}),
+        .key_up => try fmt.allocPrintZ(allocator, "UP", .{}),
+        .key_page_up => try fmt.allocPrintZ(allocator, "PGUP", .{}),
+        .key_page_down => try fmt.allocPrintZ(allocator, "PGDN", .{}),
+        .key_home => try fmt.allocPrintZ(allocator, "HOME", .{}),
+        .key_end => try fmt.allocPrintZ(allocator, "END", .{}),
+        //.key_caps_lock => try fmt.allocPrintZ(allocator, "CA.LK", .{}),
+        .key_f1 => try fmt.allocPrintZ(allocator, "F1", .{}),
+        .key_f2 => try fmt.allocPrintZ(allocator, "F2", .{}),
+        .key_f3 => try fmt.allocPrintZ(allocator, "F3", .{}),
+        .key_f4 => try fmt.allocPrintZ(allocator, "F4", .{}),
+        .key_f5 => try fmt.allocPrintZ(allocator, "F5", .{}),
+        .key_f6 => try fmt.allocPrintZ(allocator, "F6", .{}),
+        .key_f7 => try fmt.allocPrintZ(allocator, "F7", .{}),
+        .key_f8 => try fmt.allocPrintZ(allocator, "F8", .{}),
+        .key_f9 => try fmt.allocPrintZ(allocator, "F9", .{}),
+        .key_f10 => try fmt.allocPrintZ(allocator, "F10", .{}),
+        .key_f11 => try fmt.allocPrintZ(allocator, "F11", .{}),
+        //.key_f12 => try fmt.allocPrintZ(allocator, "F12", .{}),
+        .key_left_shift => try fmt.allocPrintZ(allocator, "L.SFT", .{}),
+        .key_left_control => try fmt.allocPrintZ(allocator, "L.CTL", .{}),
+        .key_left_alt => try fmt.allocPrintZ(allocator, "L.ALT", .{}),
+        .key_right_shift => try fmt.allocPrintZ(allocator, "R.SFT", .{}),
+        .key_right_control => try fmt.allocPrintZ(allocator, "R.CTL", .{}),
+        .key_right_alt => try fmt.allocPrintZ(allocator, "R.ALT", .{}),
+        else => unreachable,
+    };
+    //}}}
+}
+
+fn isSmallText(key: rl.KeyboardKey) bool {
+    //{{{
+    return switch (key) {
+        .key_space,
+        .key_enter,
+        .key_tab,
+        .key_insert,
+        .key_delete,
+        .key_right,
+        .key_left,
+        .key_down,
+        .key_page_up,
+        .key_page_down,
+        .key_home,
+        .key_end,
+        //.key_caps_lock,
+        .key_f10,
+        .key_f11,
+        //.key_f12,
+        .key_left_shift,
+        .key_left_control,
+        .key_left_alt,
+        .key_right_shift,
+        .key_right_control,
+        .key_right_alt,
+        => true,
+        else => false,
+    };
     //}}}
 }
