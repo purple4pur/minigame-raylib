@@ -12,7 +12,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     const screenWidth = 450;
-    const screenHeight = 400;
+    const screenHeight = 420;
     rl.initWindow(screenWidth, screenHeight, "Speedtest [purple4pur]");
     defer rl.closeWindow();
 
@@ -303,6 +303,52 @@ pub fn main() !void {
     } });
     //}}}
 
+    // groupFooter
+    // -----------
+    //{{{
+    var groupFooter = rlg.ObjectGroup.init(allocator, 18, 395);
+    defer groupFooter.deinit();
+
+    const helpButtonText = rlg.DrawableObject{ .text = @constCast("How to use?") };
+    try groupFooter.add(&.{ .object = &helpButtonText, .properties = &.{
+        .x = 0,
+        .y = 0,
+        .size = 10,
+        .color = rl.Color.blue,
+    } });
+
+    try groupFooter.add(&.{ .object = &.{ .rectangle = .{
+        .x = 0,
+        .y = 11,
+        .width = @as(f32, @floatFromInt(rl.measureText(helpButtonText.text, 10))),
+        .height = 1,
+    } }, .properties = &.{ .color = rl.Color.blue } });
+
+    const homepageButtonText = rlg.DrawableObject{ .text = @constCast("Homepage") };
+    try groupFooter.add(&.{ .object = &homepageButtonText, .properties = &.{
+        .x = 75,
+        .y = 0,
+        .size = 10,
+        .color = rl.Color.blue,
+    } });
+
+    try groupFooter.add(&.{ .object = &.{ .rectangle = .{
+        .x = 75,
+        .y = 11,
+        .width = @as(f32, @floatFromInt(rl.measureText(homepageButtonText.text, 10))),
+        .height = 1,
+    } }, .properties = &.{ .color = rl.Color.blue } });
+
+    try groupFooter.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("@Purple4pur")),
+    }, .properties = &.{
+        .x = 350,
+        .y = 0,
+        .size = 10,
+        .color = rl.Color.dark_gray,
+    } });
+    //}}}
+
     const Screen = enum { speedtest, k1_binding, k2_binding };
     var currentScreen: Screen = .speedtest;
 
@@ -434,6 +480,8 @@ pub fn main() !void {
         avgBpm5sNowText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.avgBpm5s});
         avgBpm5sMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxAvgBpm5s});
         groupLegend.drawAll();
+
+        groupFooter.drawAll();
 
         switch (currentScreen) {
             .k1_binding, .k2_binding => {
