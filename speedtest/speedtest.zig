@@ -305,6 +305,95 @@ pub fn main() !void {
     } });
     //}}}
 
+    // groupBinding
+    // -----------
+    //{{{
+    var groupBinding = rlg.ObjectGroup.init(allocator, 0, 0);
+    defer groupBinding.deinit();
+
+    try groupBinding.add(&.{ .object = &.{ .rectangle = .{
+        .x = 0,
+        .y = 0,
+        .width = screenWidth,
+        .height = screenHeight,
+    } }, .properties = &.{ .color = rl.Color.light_gray.fade(0.55) } });
+
+    const promptK1 = "Press a key for K1 binding";
+    const promptK2 = "Press a key for K2 binding";
+    var bindingPrompt = rlg.DrawableObject{ .text = undefined };
+    var promptWidth: i32 = undefined;
+    var promptBG = rlg.DrawableObject{ .rectangle = .{
+        .x = undefined,
+        .y = screenHeight / 2 - 20,
+        .width = undefined,
+        .height = 40,
+    } };
+    try groupBinding.add(&.{ .object = &promptBG, .properties = &.{ .color = rl.Color.dark_gray } });
+
+    var promptProp = rlg.ObjectProperties{
+        .x = undefined,
+        .y = screenHeight / 2 - 10,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    };
+    try groupBinding.add(&.{ .object = &bindingPrompt, .properties = &promptProp });
+    //}}}
+
+    // groupHelp
+    // -----------
+    //{{{
+    var groupHelp = rlg.ObjectGroup.init(allocator, 0, 0);
+    defer groupHelp.deinit();
+
+    try groupHelp.add(&.{ .object = &.{ .rectangle = .{
+        .x = 0,
+        .y = 0,
+        .width = screenWidth,
+        .height = screenHeight,
+    } }, .properties = &.{ .color = rl.Color.light_gray.fade(0.55) } });
+
+    const groupHelpWidth = 380;
+    const groupHelpHeight = 180;
+
+    var helpMsgBG = rlg.DrawableObject{ .rectangle = .{
+        .x = screenWidth / 2 - groupHelpWidth / 2,
+        .y = screenHeight / 2 - groupHelpHeight / 2,
+        .width = groupHelpWidth,
+        .height = groupHelpHeight,
+    } };
+    try groupHelp.add(&.{ .object = &helpMsgBG, .properties = &.{ .color = rl.Color.dark_gray } });
+
+    const helpMsg0 = rlg.DrawableObject{ .text = @constCast("(Click anywhere to return)") };
+    const helpMsg1 = rlg.DrawableObject{ .text = @constCast("Hit the keys as fast and steady") };
+    const helpMsg2 = rlg.DrawableObject{ .text = @constCast("as possible. Click on keycap") };
+    const helpMsg3 = rlg.DrawableObject{ .text = @constCast("icons to change key bindings.") };
+
+    try groupHelp.add(&.{ .object = &helpMsg0, .properties = &.{
+        .x = screenWidth / 2 - groupHelpWidth / 2 + 20,
+        .y = screenHeight / 2 - groupHelpHeight / 2 + 20,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    } });
+    try groupHelp.add(&.{ .object = &helpMsg1, .properties = &.{
+        .x = screenWidth / 2 - groupHelpWidth / 2 + 20,
+        .y = screenHeight / 2 - groupHelpHeight / 2 + 70,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    } });
+    try groupHelp.add(&.{ .object = &helpMsg2, .properties = &.{
+        .x = screenWidth / 2 - groupHelpWidth / 2 + 20,
+        .y = screenHeight / 2 - groupHelpHeight / 2 + 100,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    } });
+    try groupHelp.add(&.{ .object = &helpMsg3, .properties = &.{
+        .x = screenWidth / 2 - groupHelpWidth / 2 + 20,
+        .y = screenHeight / 2 - groupHelpHeight / 2 + 130,
+        .size = 20,
+        .color = rl.Color.ray_white,
+    } });
+    //}}}
+
     // groupFooter
     // -----------
     //{{{
@@ -530,28 +619,15 @@ pub fn main() !void {
         switch (currentScreen) {
             .k1_binding, .k2_binding => {
                 //{{{
-                rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.light_gray.fade(0.55));
-                const prompt = "Press a key for " ++ if (currentScreen == .k1_binding) "K1 binding" else "K2 binding";
-                const promptWidth = rl.measureText(prompt, 20);
-                rl.drawRectangle(
-                    screenWidth / 2 - @divFloor(promptWidth, 2) - 10,
-                    screenHeight / 2 - 15,
-                    promptWidth + 20,
-                    30,
-                    rl.Color.dark_gray,
-                );
-                rl.drawText(
-                    prompt,
-                    screenWidth / 2 - @divFloor(promptWidth, 2),
-                    screenHeight / 2 - 10,
-                    20,
-                    rl.Color.ray_white,
-                );
+                bindingPrompt.text = @constCast(if (currentScreen == .k1_binding) promptK1 else promptK2);
+                promptWidth = rl.measureText(bindingPrompt.text, 20);
+                promptBG.rectangle.x = @as(f32, @floatFromInt(screenWidth / 2 - @divFloor(promptWidth, 2) - 15));
+                promptBG.rectangle.width = @as(f32, @floatFromInt(promptWidth + 30));
+                promptProp.x = screenWidth / 2 - @divFloor(promptWidth, 2);
+                groupBinding.drawAll();
                 //}}}
             },
-            .help => {
-                rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.light_gray.fade(0.55));
-            },
+            .help => groupHelp.drawAll(),
             else => {},
         }
     }
