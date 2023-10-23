@@ -91,8 +91,51 @@ pub fn main() !void {
     var k2Bar = Bar.init(allocator, 0, 65, 400, 30, rl.Color.gold);
     defer k2Bar.deinit();
 
-    var kps = Kps.init(allocator, 270, 115, 20, rl.Color.dark_gray, 4);
+    var kps = Kps.init(allocator, 4);
     defer kps.deinit();
+
+    // groupKps
+    // -------
+    //{{{
+    var groupKps = rlg.ObjectGroup.init(allocator, 250, 113);
+    defer groupKps.deinit();
+
+    try groupKps.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("KPS:")),
+    }, .properties = &.{
+        .x = 0,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var kpsText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(kpsText.text);
+    try groupKps.add(&.{ .object = &kpsText, .properties = &.{
+        .x = 55,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    try groupKps.add(&.{ .object = &.{
+        .text = @as([:0]u8, @constCast("max:")),
+    }, .properties = &.{
+        .x = 100,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+
+    var kpsMaxText = rlg.DrawableObject{ .text = try fmt.allocPrintZ(allocator, "0", .{}) };
+    defer allocator.free(kpsMaxText.text);
+    try groupKps.add(&.{ .object = &kpsMaxText, .properties = &.{
+        .x = 150,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.dark_gray,
+    } });
+    //}}}
 
     var chart = Chart.init(allocator, 15, 140, 420, 150, 20);
     defer chart.deinit();
@@ -370,8 +413,11 @@ pub fn main() !void {
         groupK1.drawAll();
         groupK2.drawAll();
 
-        try kps.drawKps("kps: {}");
-        try kps.drawMaxKps("max: {}", 90, 0);
+        allocator.free(kpsText.text);
+        allocator.free(kpsMaxText.text);
+        kpsText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.kps});
+        kpsMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxKps});
+        groupKps.drawAll();
 
         chart.draw();
 
