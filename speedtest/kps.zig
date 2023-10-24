@@ -31,6 +31,7 @@ pub const Kps = struct {
     }
 
     pub fn deinit(self: *Self) void {
+        //{{{
         {
             var it = self.keyPool.first;
             var next: ?*TimeQueue.Node = null;
@@ -48,6 +49,7 @@ pub const Kps = struct {
             }
         }
         self.* = undefined;
+        //}}}
     }
 
     pub fn catchKeyAt(self: *Self, time: f64) !void {
@@ -58,6 +60,7 @@ pub const Kps = struct {
     }
 
     pub fn refreshData(self: *Self, currentTime: f64) !void {
+        //{{{
         {
             // throw away old timestamps
             var it = self.keyPool.first;
@@ -141,5 +144,37 @@ pub const Kps = struct {
             self.avgBpm5s = @as(u16, @intFromFloat(totalBpm5s / @as(f32, @floatFromInt(self.bpmPool.len))));
             if (self.avgBpm5s > self.maxAvgBpm5s) self.maxAvgBpm5s = self.avgBpm5s;
         }
+        //}}}
+    }
+
+    pub fn resetData(self: *Self) void {
+        //{{{
+        {
+            var it = self.keyPool.first;
+            var next: ?*TimeQueue.Node = null;
+            while (it) |node| : (it = next) {
+                next = node.next;
+                self.keyPool.remove(node);
+                self.allocator.destroy(node);
+            }
+        }
+        {
+            var it = self.bpmPool.first;
+            var next: ?*BpmQueue.Node = null;
+            while (it) |node| : (it = next) {
+                next = node.next;
+                self.bpmPool.remove(node);
+                self.allocator.destroy(node);
+            }
+        }
+        self.kps = 0;
+        self.maxKps = 0;
+        self.bpm = 0;
+        self.maxBpm = 0;
+        self.avgBpm2s = 0;
+        self.maxAvgBpm2s = 0;
+        self.avgBpm5s = 0;
+        self.maxAvgBpm5s = 0;
+        //}}}
     }
 };

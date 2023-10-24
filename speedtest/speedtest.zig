@@ -141,6 +141,23 @@ pub fn main() !void {
     } });
     //}}}
 
+    // groupReset
+    // ----------
+    //{{{
+    var groupReset = rlg.ObjectGroup.init(allocator, 17, 113);
+    defer groupReset.deinit();
+
+    const resetText = rlg.DrawableObject{ .text = @constCast("Reset") };
+    const resetWidth = @as(f32, @floatFromInt(rl.measureText(resetText.text, 20)));
+    var resetProp = rlg.ObjectProperties{
+        .x = 0,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.light_gray,
+    };
+    try groupReset.add(&.{ .object = &resetText, .properties = &resetProp });
+    //}}}
+
     var chart = Chart.init(allocator, 15, 140, 420, 150, 20);
     defer chart.deinit();
 
@@ -323,7 +340,8 @@ pub fn main() !void {
     const promptK1 = "Press a key for K1 binding";
     const promptK2 = "Press a key for K2 binding";
     var bindingPrompt = rlg.DrawableObject{ .text = undefined };
-    var promptWidth: i32 = undefined;
+    const promptWidthK1 = rl.measureText(promptK1, 20);
+    const promptWidthK2 = rl.measureText(promptK2, 20);
     var promptBG = rlg.DrawableObject{ .rectangle = .{
         .x = undefined,
         .y = screenHeight / 2 - 20,
@@ -403,40 +421,40 @@ pub fn main() !void {
     defer groupFooter.deinit();
 
     const helpButtonText = rlg.DrawableObject{ .text = @constCast("How to use?") };
-    const helpButtonX = 0;
-    const helpButtonY = 0;
-    try groupFooter.add(&.{ .object = &helpButtonText, .properties = &.{
-        .x = helpButtonX,
-        .y = helpButtonY,
+    var helpButtonProp = rlg.ObjectProperties{
+        .x = 0,
+        .y = 0,
         .size = 10,
         .color = rl.Color.blue,
-    } });
+    };
+    try groupFooter.add(&.{ .object = &helpButtonText, .properties = &helpButtonProp });
 
     const helpButtonWidth = @as(f32, @floatFromInt(rl.measureText(helpButtonText.text, 10)));
+    var helpButtonUnderlineProp = rlg.ObjectProperties{ .color = rl.Color.blue };
     try groupFooter.add(&.{ .object = &.{ .rectangle = .{
-        .x = helpButtonX,
-        .y = helpButtonY + 11,
+        .x = @as(f32, @floatFromInt(helpButtonProp.x.?)),
+        .y = @as(f32, @floatFromInt(helpButtonProp.y.? + 11)),
         .width = helpButtonWidth,
         .height = 1,
-    } }, .properties = &.{ .color = rl.Color.blue } });
+    } }, .properties = &helpButtonUnderlineProp });
 
     const homepageButtonText = rlg.DrawableObject{ .text = @constCast("Homepage") };
-    const homepageButtonX = 75;
-    const homepageButtonY = 0;
-    try groupFooter.add(&.{ .object = &homepageButtonText, .properties = &.{
-        .x = homepageButtonX,
-        .y = homepageButtonY,
+    var homepageButtonProp = rlg.ObjectProperties{
+        .x = 75,
+        .y = 0,
         .size = 10,
         .color = rl.Color.blue,
-    } });
+    };
+    try groupFooter.add(&.{ .object = &homepageButtonText, .properties = &homepageButtonProp });
 
     const homepageButtonWidth = @as(f32, @floatFromInt(rl.measureText(homepageButtonText.text, 10)));
+    var homepageButtonUnderlineProp = rlg.ObjectProperties{ .color = rl.Color.blue };
     try groupFooter.add(&.{ .object = &.{ .rectangle = .{
-        .x = homepageButtonX,
-        .y = homepageButtonY + 11,
+        .x = @as(f32, @floatFromInt(homepageButtonProp.x.?)),
+        .y = @as(f32, @floatFromInt(homepageButtonProp.y.? + 11)),
         .width = homepageButtonWidth,
         .height = 1,
-    } }, .properties = &.{ .color = rl.Color.blue } });
+    } }, .properties = &homepageButtonUnderlineProp });
 
     try groupFooter.add(&.{ .object = &.{
         .text = @as([:0]u8, @constCast("Made with")),
@@ -475,50 +493,6 @@ pub fn main() !void {
         switch (currentScreen) {
             .speedtest => {
                 //{{{
-                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
-                    .x = @as(f32, @floatFromInt(groupK1.x)) + k1Rectangle.rectangle.x,
-                    .y = @as(f32, @floatFromInt(groupK1.y)) + k1Rectangle.rectangle.y,
-                    .width = k1Rectangle.rectangle.width,
-                    .height = k1Rectangle.rectangle.height,
-                })) {
-                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
-                        currentScreen = .k1_binding;
-                    }
-                }
-
-                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
-                    .x = @as(f32, @floatFromInt(groupK2.x)) + k2Rectangle.rectangle.x,
-                    .y = @as(f32, @floatFromInt(groupK2.y)) + k2Rectangle.rectangle.y,
-                    .width = k2Rectangle.rectangle.width,
-                    .height = k2Rectangle.rectangle.height,
-                })) {
-                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
-                        currentScreen = .k2_binding;
-                    }
-                }
-
-                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
-                    .x = @as(f32, @floatFromInt(groupFooter.x)) + helpButtonX,
-                    .y = @as(f32, @floatFromInt(groupFooter.y)) + helpButtonY,
-                    .width = helpButtonWidth,
-                    .height = 12,
-                })) {
-                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
-                        currentScreen = .help;
-                    }
-                }
-
-                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
-                    .x = @as(f32, @floatFromInt(groupFooter.x)) + homepageButtonX,
-                    .y = @as(f32, @floatFromInt(groupFooter.y)) + homepageButtonY,
-                    .width = homepageButtonWidth,
-                    .height = 12,
-                })) {
-                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
-                        rl.openURL(homepageURL);
-                    }
-                }
-
                 if (isBindingDown(k1Binding)) {
                     k1BgProp.color = rl.Color.gold;
                     try k1Bar.pressed();
@@ -537,6 +511,81 @@ pub fn main() !void {
 
                 if (isBindingPressed(k1Binding)) try kps.catchKeyAt(time);
                 if (isBindingPressed(k2Binding)) try kps.catchKeyAt(time);
+
+                // k1 button
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupK1.x)) + k1Rectangle.rectangle.x,
+                    .y = @as(f32, @floatFromInt(groupK1.y)) + k1Rectangle.rectangle.y,
+                    .width = k1Rectangle.rectangle.width,
+                    .height = k1Rectangle.rectangle.height,
+                })) {
+                    k1BgProp.color = rl.Color.green;
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        currentScreen = .k1_binding;
+                    }
+                }
+
+                // k2 button
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupK2.x)) + k2Rectangle.rectangle.x,
+                    .y = @as(f32, @floatFromInt(groupK2.y)) + k2Rectangle.rectangle.y,
+                    .width = k2Rectangle.rectangle.width,
+                    .height = k2Rectangle.rectangle.height,
+                })) {
+                    k2BgProp.color = rl.Color.green;
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        currentScreen = .k2_binding;
+                    }
+                }
+
+                // reset button
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupReset.x)) + 0,
+                    .y = @as(f32, @floatFromInt(groupReset.y)) + 0,
+                    .width = resetWidth,
+                    .height = 20,
+                })) {
+                    resetProp.color = rl.Color.red;
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        kps.resetData();
+                    }
+                } else {
+                    resetProp.color = rl.Color.light_gray;
+                }
+
+                // help button
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupFooter.x + helpButtonProp.x.?)),
+                    .y = @as(f32, @floatFromInt(groupFooter.y + helpButtonProp.y.?)),
+                    .width = helpButtonWidth,
+                    .height = 12,
+                })) {
+                    helpButtonProp.color = rl.Color.dark_blue;
+                    helpButtonUnderlineProp.color = rl.Color.dark_blue;
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        currentScreen = .help;
+                    }
+                } else {
+                    helpButtonProp.color = rl.Color.blue;
+                    helpButtonUnderlineProp.color = rl.Color.blue;
+                }
+
+                // homepage button
+                if (rl.checkCollisionPointRec(rl.getMousePosition(), .{
+                    .x = @as(f32, @floatFromInt(groupFooter.x + homepageButtonProp.x.?)),
+                    .y = @as(f32, @floatFromInt(groupFooter.y + homepageButtonProp.y.?)),
+                    .width = homepageButtonWidth,
+                    .height = 12,
+                })) {
+                    homepageButtonProp.color = rl.Color.dark_blue;
+                    homepageButtonUnderlineProp.color = rl.Color.dark_blue;
+                    if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
+                        rl.openURL(homepageURL);
+                    }
+                } else {
+                    homepageButtonProp.color = rl.Color.blue;
+                    homepageButtonUnderlineProp.color = rl.Color.blue;
+                }
                 //}}}
             },
             .k1_binding => {
@@ -631,6 +680,7 @@ pub fn main() !void {
         kpsMaxText.text = try fmt.allocPrintZ(allocator, "{}", .{kps.maxKps});
         groupKps.drawAll();
 
+        groupReset.drawAll();
         chart.draw();
 
         allocator.free(bpmNowText.text);
@@ -650,13 +700,21 @@ pub fn main() !void {
         groupFooter.drawAll();
 
         switch (currentScreen) {
-            .k1_binding, .k2_binding => {
+            .k1_binding => {
                 //{{{
-                bindingPrompt.text = @constCast(if (currentScreen == .k1_binding) promptK1 else promptK2);
-                promptWidth = rl.measureText(bindingPrompt.text, 20);
-                promptBG.rectangle.x = @as(f32, @floatFromInt(screenWidth / 2 - @divFloor(promptWidth, 2) - 15));
-                promptBG.rectangle.width = @as(f32, @floatFromInt(promptWidth + 30));
-                promptProp.x = screenWidth / 2 - @divFloor(promptWidth, 2);
+                bindingPrompt.text = @constCast(promptK1);
+                promptBG.rectangle.x = @as(f32, @floatFromInt(screenWidth / 2 - @divFloor(promptWidthK1, 2) - 15));
+                promptBG.rectangle.width = @as(f32, @floatFromInt(promptWidthK1 + 30));
+                promptProp.x = screenWidth / 2 - @divFloor(promptWidthK1, 2);
+                groupBinding.drawAll();
+                //}}}
+            },
+            .k2_binding => {
+                //{{{
+                bindingPrompt.text = @constCast(promptK2);
+                promptBG.rectangle.x = @as(f32, @floatFromInt(screenWidth / 2 - @divFloor(promptWidthK2, 2) - 15));
+                promptBG.rectangle.width = @as(f32, @floatFromInt(promptWidthK2 + 30));
+                promptProp.x = screenWidth / 2 - @divFloor(promptWidthK2, 2);
                 groupBinding.drawAll();
                 //}}}
             },
