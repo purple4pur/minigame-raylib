@@ -8,6 +8,7 @@ const Kps = @import("kps.zig").Kps;
 const Chart = @import("chart.zig").Chart;
 const Binding = union(enum) { keyboard: rl.KeyboardKey, mouse: rl.MouseButton };
 
+const versionString = "0.1.0";
 const homepageURL = "https://github.com/purple4pur/minigame-raylib/wiki/Homepage:-Speedtest";
 
 pub fn main() !void {
@@ -16,7 +17,7 @@ pub fn main() !void {
 
     const screenWidth = 450;
     const screenHeight = 420;
-    rl.initWindow(screenWidth, screenHeight, "Speedtest [purple4pur]");
+    rl.initWindow(screenWidth, screenHeight, "Speedtest " ++ versionString);
     defer rl.closeWindow();
 
     rl.setTargetFPS(360);
@@ -519,7 +520,7 @@ pub fn main() !void {
                     .width = k1Rectangle.rectangle.width,
                     .height = k1Rectangle.rectangle.height,
                 })) {
-                    k1BgProp.color = rl.Color.green;
+                    k1BgProp.color = rl.Color.yellow;
                     if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
                         currentScreen = .k1_binding;
                     }
@@ -532,7 +533,7 @@ pub fn main() !void {
                     .width = k2Rectangle.rectangle.width,
                     .height = k2Rectangle.rectangle.height,
                 })) {
-                    k2BgProp.color = rl.Color.green;
+                    k2BgProp.color = rl.Color.yellow;
                     if (rl.isMouseButtonReleased(rl.MouseButton.mouse_button_left)) {
                         currentScreen = .k2_binding;
                     }
