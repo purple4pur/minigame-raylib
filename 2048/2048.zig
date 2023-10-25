@@ -34,8 +34,10 @@ pub fn main() !void {
     defer grid.deinit();
     try grid.createGrid();
 
+    var newBrickFlag: u128 = 0;
+
     grid.starting = 2; // start a game with minimal value 1 (optional)
-    try grid.generate();
+    _ = try grid.generate();
 
     const screenWidth = brickMargin * 2 + brickWidth * gridSize + brickSpace * (gridSize - 1);
     const screenHeight = screenWidth; // TODO: more margin for score, steps etc.
@@ -47,29 +49,27 @@ pub fn main() !void {
     var buf: [32]u8 = undefined;
 
     while (!rl.windowShouldClose()) {
-        //{{{
         if (rl.isKeyPressed(rl.KeyboardKey.key_r)) {
             // TODO: start a new game
-            _ = undefined;
         }
 
         if (rl.isKeyPressed(rl.KeyboardKey.key_up) or rl.isKeyPressed(rl.KeyboardKey.key_w)) {
             try grid.move(.up);
             // TODO: when there's no change, do not generate
             // TODO: detect a dead game
-            try grid.generate();
+            newBrickFlag = try grid.generate();
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_down) or rl.isKeyPressed(rl.KeyboardKey.key_s)) {
             try grid.move(.down);
-            try grid.generate();
+            newBrickFlag = try grid.generate();
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_left) or rl.isKeyPressed(rl.KeyboardKey.key_a)) {
             try grid.move(.left);
-            try grid.generate();
+            newBrickFlag = try grid.generate();
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_right) or rl.isKeyPressed(rl.KeyboardKey.key_d)) {
             try grid.move(.right);
-            try grid.generate();
+            newBrickFlag = try grid.generate();
         }
 
         rl.beginDrawing();
@@ -86,6 +86,12 @@ pub fn main() !void {
 
                 const color = colorMap(value);
                 rl.drawRectangleRec(brick, color.brick);
+
+                // draw outlines for new generated bricks
+                if (newBrickFlag & math.shl(u128, 1, row * gridSize + col) != 0) {
+                    rl.drawRectangleLinesEx(brick, 4, rl.Color.red);
+                }
+
                 const text = try std.fmt.bufPrintZ(&buf, "{d}", .{value});
                 const textWidth = rl.measureText(text, fontSize);
                 rl.drawText(
@@ -97,7 +103,6 @@ pub fn main() !void {
                 );
             }
         }
-        //}}}
     }
 }
 
@@ -123,6 +128,7 @@ fn colorMap(value: u16) ColorMapPair {
 }
 
 test "Grid pallete" {
+    //{{{
     const allocator = std.testing.allocator;
     var prng = rand.DefaultPrng.init(0);
     const random = prng.random();
@@ -163,7 +169,6 @@ test "Grid pallete" {
     rl.setTargetFPS(30);
 
     while (!rl.windowShouldClose()) {
-        //{{{
         rl.beginDrawing();
         defer rl.endDrawing();
         rl.clearBackground(rl.Color.white);
@@ -189,6 +194,6 @@ test "Grid pallete" {
                 );
             }
         }
-        //}}}
     }
+    //}}}
 }

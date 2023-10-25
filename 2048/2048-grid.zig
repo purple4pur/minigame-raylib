@@ -100,7 +100,7 @@ pub const Grid = struct {
         //}}}
     }
 
-    pub fn generate(self: *Self) !void {
+    pub fn generate(self: *Self) !u128 {
         //{{{
         _ = try self.getGrid();
         if (self.starting == 0 or !math.isPowerOfTwo(self.starting)) return GridError.InvalidStarting;
@@ -121,7 +121,7 @@ pub const Grid = struct {
                 try blanks.append(.{ .x = line, .y = i });
             }
         }
-        if (blanks.items.len == 0) return;
+        if (blanks.items.len == 0) return 0;
 
         // 2. generate candidate values
         var candidates = try self.allocator.alloc(u16, blanks.items.len);
@@ -137,9 +137,16 @@ pub const Grid = struct {
         self.random.shuffle(u16, candidates);
 
         // 4. set to blank bricks
+        var newBrickFlag: u128 = 0;
         for (blanks.items, 0..) |blank, i| {
             self.values.?[blank.x][blank.y] = candidates[i];
+            if (candidates[i] != 0) {
+                // record new generated brick position
+                newBrickFlag |= math.shl(u128, 1, blank.x * self.size + blank.y);
+            }
         }
+
+        return newBrickFlag;
         //}}}
     }
 
