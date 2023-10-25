@@ -16,6 +16,11 @@ zig build -l
 
 Track progress: purple4pur/minigame-raylib#2. Checkout dev branch for latest changes!
 
+## Current Available
+
+* **Pallete**: a simple pallete to go through all named colors in raylib
+* **Speedtest**: designed for osu!standard players, which aims to test how well a player can hit streams in game. [[Homepage]](https://github.com/purple4pur/minigame-raylib/wiki/Homepage:-Speedtest)
+
 ## License
 
 MIT. Please read `/licenses` folder for used/related projects' licenses!
