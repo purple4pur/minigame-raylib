@@ -18,8 +18,8 @@ pub const Grid = struct {
     width: i32,
     space: i32,
     margin: i32,
-    starting: u16 = 2, // minimal value to start a game with
 
+    starting: u16 = 2, // minimal value to start a game with
     grid: ?[][]rl.Rectangle = null,
     values: ?[][]u16 = null,
 
@@ -150,9 +150,10 @@ pub const Grid = struct {
         //}}}
     }
 
-    pub fn move(self: *Self, d: Direction) !void {
+    pub fn move(self: *Self, d: Direction) !bool {
         //{{{
         _ = try self.getGrid();
+        const beforePositionFlag = self.getPositionFlag();
         switch (d) {
             .left => {
                 for (0..self.size) |line| {
@@ -231,6 +232,22 @@ pub const Grid = struct {
                 }
             },
         }
+        const afterPositionFlag = self.getPositionFlag();
+        return (beforePositionFlag != afterPositionFlag); // 'before != after' means a valid move
+        //}}}
+    }
+
+    fn getPositionFlag(self: Self) u128 {
+        //{{{
+        var flag: u128 = 0;
+        for (0..self.size) |i| {
+            for (0..self.size) |j| {
+                if (self.values.?[i][j] != 0) {
+                    flag |= math.shl(u128, 1, i * self.size + j);
+                }
+            }
+        }
+        return flag;
         //}}}
     }
 };

@@ -6,9 +6,8 @@ const print = std.debug.print;
 
 const rl = @import("raylib");
 
-const pkgGrid = @import("2048-grid.zig");
-const Grid = pkgGrid.Grid;
-const i32FromFloat = pkgGrid.i32FromFloat;
+const Grid = @import("grid.zig").Grid;
+const i32FromFloat = @import("grid.zig").i32FromFloat;
 
 const ColorMapPair = struct { brick: rl.Color, text: rl.Color };
 
@@ -54,22 +53,25 @@ pub fn main() !void {
         }
 
         if (rl.isKeyPressed(rl.KeyboardKey.key_up) or rl.isKeyPressed(rl.KeyboardKey.key_w)) {
-            try grid.move(.up);
-            // TODO: when there's no change, do not generate
             // TODO: detect a dead game
-            newBrickFlag = try grid.generate();
+            if (try grid.move(.up)) {
+                newBrickFlag = try grid.generate();
+            }
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_down) or rl.isKeyPressed(rl.KeyboardKey.key_s)) {
-            try grid.move(.down);
-            newBrickFlag = try grid.generate();
+            if (try grid.move(.down)) {
+                newBrickFlag = try grid.generate();
+            }
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_left) or rl.isKeyPressed(rl.KeyboardKey.key_a)) {
-            try grid.move(.left);
-            newBrickFlag = try grid.generate();
+            if (try grid.move(.left)) {
+                newBrickFlag = try grid.generate();
+            }
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_right) or rl.isKeyPressed(rl.KeyboardKey.key_d)) {
-            try grid.move(.right);
-            newBrickFlag = try grid.generate();
+            if (try grid.move(.right)) {
+                newBrickFlag = try grid.generate();
+            }
         }
 
         rl.beginDrawing();
