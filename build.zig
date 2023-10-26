@@ -115,12 +115,17 @@ pub fn build(b: *std.Build) !void {
 
     var raylib = rl.getModuleInternal(b);
     var raylib_math = rl.math.getModuleInternal(b);
+    const raylib_group = b.addModule("raylib-group", .{
+        .source_file = .{ .path = "lib/raylib-group.zig" },
+        .dependencies = &.{.{ .name = "raylib", .module = raylib }},
+    });
 
     for (programs) |prog| {
         if (target.getOsTag() == .emscripten) {
             const exe_lib = compileForEmscripten(b, prog.name, prog.path, target, optimize);
             exe_lib.addModule("raylib", raylib);
             exe_lib.addModule("raylib-math", raylib_math);
+            exe_lib.addModule("raylib-group", raylib_group);
             const raylib_artifact = getArtifact(b, target, optimize);
 
             // Note that raylib itself isn't actually added to the exe_lib
@@ -144,6 +149,7 @@ pub fn build(b: *std.Build) !void {
             rl.link(b, exe, target, optimize);
             exe.addModule("raylib", raylib);
             exe.addModule("raylib-math", raylib_math);
+            exe.addModule("raylib-group", raylib_group);
             if (optimize != .Debug) exe.subsystem = .Windows;
 
             const install_cmd = b.addInstallArtifact(exe, .{});
