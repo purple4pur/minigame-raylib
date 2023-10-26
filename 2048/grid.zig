@@ -163,7 +163,7 @@ pub const Grid = struct {
                     for (0..self.size) |i| {
                         if (self.values.?[line][i] == 0) continue;
                         if (index > 0 and canStack and self.values.?[line][i] == self.values.?[line][index - 1]) {
-                            self.values.?[line][index - 1] += self.values.?[line][i];
+                            self.values.?[line][index - 1] = try math.add(u16, self.values.?[line][index - 1], self.values.?[line][i]);
                             canStack = false;
                             continue;
                         }
@@ -182,7 +182,7 @@ pub const Grid = struct {
                     for (0..self.size) |i| {
                         if (self.values.?[i][col] == 0) continue;
                         if (index > 0 and canStack and self.values.?[i][col] == self.values.?[index - 1][col]) {
-                            self.values.?[index - 1][col] += self.values.?[i][col];
+                            self.values.?[index - 1][col] = try math.add(u16, self.values.?[index - 1][col], self.values.?[i][col]);
                             canStack = false;
                             continue;
                         }
@@ -201,7 +201,7 @@ pub const Grid = struct {
                     for (0..self.size) |i| {
                         if (self.values.?[line][self.size - 1 - i] == 0) continue;
                         if (index > 0 and canStack and self.values.?[line][self.size - 1 - i] == self.values.?[line][self.size - index]) {
-                            self.values.?[line][self.size - index] += self.values.?[line][self.size - 1 - i];
+                            self.values.?[line][self.size - index] = try math.add(u16, self.values.?[line][self.size - index], self.values.?[line][self.size - 1 - i]);
                             canStack = false;
                             continue;
                         }
@@ -220,7 +220,7 @@ pub const Grid = struct {
                     for (0..self.size) |i| {
                         if (self.values.?[self.size - 1 - i][col] == 0) continue;
                         if (index > 0 and canStack and self.values.?[self.size - 1 - i][col] == self.values.?[self.size - index][col]) {
-                            self.values.?[self.size - index][col] += self.values.?[self.size - 1 - i][col];
+                            self.values.?[self.size - index][col] = try math.add(u16, self.values.?[self.size - index][col], self.values.?[self.size - 1 - i][col]);
                             canStack = false;
                             continue;
                         }
@@ -248,6 +248,22 @@ pub const Grid = struct {
             }
         }
         return flag;
+        //}}}
+    }
+
+    pub fn newGame(self: *Self) !u128 {
+        //{{{
+        if (self.values) |values| {
+            // clear all values
+            for (values) |line| {
+                for (line) |*v| v.* = 0;
+            }
+            // generate new bricks
+            _ = self.generate() catch unreachable;
+            return 0;
+        } else {
+            return GridError.GridNotCreated;
+        }
         //}}}
     }
 };

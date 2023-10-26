@@ -49,7 +49,7 @@ pub fn main() !void {
 
     while (!rl.windowShouldClose()) {
         if (rl.isKeyPressed(rl.KeyboardKey.key_r)) {
-            // TODO: start a new game
+            newBrickFlag = try grid.newGame();
         }
 
         if (rl.isKeyPressed(rl.KeyboardKey.key_up) or rl.isKeyPressed(rl.KeyboardKey.key_w)) {
