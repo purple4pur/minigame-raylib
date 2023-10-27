@@ -266,6 +266,39 @@ pub const Grid = struct {
         }
         //}}}
     }
+
+    pub fn isDead(self: *Self) !bool {
+        //{{{
+        _ = try self.getValues();
+        const valuesActual = self.values.?;
+
+        // 1. shadow current values
+        self.values = try self.allocator.alloc([]u16, self.size);
+        for (self.values.?, 0..) |*line, i| {
+            line.* = try self.allocator.alloc(u16, self.size);
+            for (line.*, 0..) |*brick, j| {
+                brick.* = valuesActual[i][j];
+            }
+        }
+
+        // 2. try every move
+        const dead = !(self.move(.up) catch unreachable) and
+            !(self.move(.down) catch unreachable) and
+            !(self.move(.left) catch unreachable) and
+            !(self.move(.right) catch unreachable);
+
+        // 3. set values back
+        if (self.values) |values| {
+            for (values) |line| {
+                self.allocator.free(line);
+            }
+            self.allocator.free(values);
+        }
+        self.values = valuesActual;
+
+        return dead;
+        //}}}
+    }
 };
 
 pub fn f32FromInt(int: anytype) f32 {

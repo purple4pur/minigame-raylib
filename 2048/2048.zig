@@ -53,24 +53,31 @@ pub fn main() !void {
         }
 
         if (rl.isKeyPressed(rl.KeyboardKey.key_up) or rl.isKeyPressed(rl.KeyboardKey.key_w)) {
-            // TODO: detect a dead game
             if (try grid.move(.up)) {
                 newBrickFlag = try grid.generate();
+            } else {
+                std.debug.print("{}\n", .{try grid.isDead()});
             }
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_down) or rl.isKeyPressed(rl.KeyboardKey.key_s)) {
             if (try grid.move(.down)) {
                 newBrickFlag = try grid.generate();
+            } else {
+                std.debug.print("{}\n", .{try grid.isDead()});
             }
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_left) or rl.isKeyPressed(rl.KeyboardKey.key_a)) {
             if (try grid.move(.left)) {
                 newBrickFlag = try grid.generate();
+            } else {
+                std.debug.print("{}\n", .{try grid.isDead()});
             }
         }
         if (rl.isKeyPressed(rl.KeyboardKey.key_right) or rl.isKeyPressed(rl.KeyboardKey.key_d)) {
             if (try grid.move(.right)) {
                 newBrickFlag = try grid.generate();
+            } else {
+                std.debug.print("{}\n", .{try grid.isDead()});
             }
         }
 
