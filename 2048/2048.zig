@@ -45,40 +45,48 @@ pub fn main() !void {
     defer rl.closeWindow();
     rl.setTargetFPS(30);
 
+    var scene: enum { game, dead } = .game;
+
     var buf: [32]u8 = undefined;
 
     while (!rl.windowShouldClose()) {
         if (rl.isKeyPressed(rl.KeyboardKey.key_r)) {
             newBrickFlag = try grid.newGame();
+            scene = .game;
         }
 
-        if (rl.isKeyPressed(rl.KeyboardKey.key_up) or rl.isKeyPressed(rl.KeyboardKey.key_w)) {
-            if (try grid.move(.up)) {
-                newBrickFlag = try grid.generate();
-            } else {
-                std.debug.print("{}\n", .{try grid.isDead()});
-            }
-        }
-        if (rl.isKeyPressed(rl.KeyboardKey.key_down) or rl.isKeyPressed(rl.KeyboardKey.key_s)) {
-            if (try grid.move(.down)) {
-                newBrickFlag = try grid.generate();
-            } else {
-                std.debug.print("{}\n", .{try grid.isDead()});
-            }
-        }
-        if (rl.isKeyPressed(rl.KeyboardKey.key_left) or rl.isKeyPressed(rl.KeyboardKey.key_a)) {
-            if (try grid.move(.left)) {
-                newBrickFlag = try grid.generate();
-            } else {
-                std.debug.print("{}\n", .{try grid.isDead()});
-            }
-        }
-        if (rl.isKeyPressed(rl.KeyboardKey.key_right) or rl.isKeyPressed(rl.KeyboardKey.key_d)) {
-            if (try grid.move(.right)) {
-                newBrickFlag = try grid.generate();
-            } else {
-                std.debug.print("{}\n", .{try grid.isDead()});
-            }
+        switch (scene) {
+            .game => {
+                if (rl.isKeyPressed(rl.KeyboardKey.key_up) or rl.isKeyPressed(rl.KeyboardKey.key_w)) {
+                    if (try grid.move(.up)) {
+                        newBrickFlag = try grid.generate();
+                    } else if (try grid.isDead()) {
+                        scene = .dead;
+                    }
+                }
+                if (rl.isKeyPressed(rl.KeyboardKey.key_down) or rl.isKeyPressed(rl.KeyboardKey.key_s)) {
+                    if (try grid.move(.down)) {
+                        newBrickFlag = try grid.generate();
+                    } else if (try grid.isDead()) {
+                        scene = .dead;
+                    }
+                }
+                if (rl.isKeyPressed(rl.KeyboardKey.key_left) or rl.isKeyPressed(rl.KeyboardKey.key_a)) {
+                    if (try grid.move(.left)) {
+                        newBrickFlag = try grid.generate();
+                    } else if (try grid.isDead()) {
+                        scene = .dead;
+                    }
+                }
+                if (rl.isKeyPressed(rl.KeyboardKey.key_right) or rl.isKeyPressed(rl.KeyboardKey.key_d)) {
+                    if (try grid.move(.right)) {
+                        newBrickFlag = try grid.generate();
+                    } else if (try grid.isDead()) {
+                        scene = .dead;
+                    }
+                }
+            },
+            .dead => {},
         }
 
         rl.beginDrawing();
@@ -111,6 +119,28 @@ pub fn main() !void {
                     color.text,
                 );
             }
+        }
+
+        if (scene == .dead) {
+            rl.drawRectangle(0, 0, screenWidth, screenHeight, rl.Color.gray.fade(0.75));
+            const prompt0 = "You've reach an END!";
+            const prompt1 = "Press R to restart";
+            const size = 15;
+            const color = rl.Color.red;
+            rl.drawText(
+                prompt0,
+                screenWidth / 2 - @divFloor(rl.measureText(prompt0, size), 2),
+                screenHeight / 2 - 20,
+                size,
+                color,
+            );
+            rl.drawText(
+                prompt1,
+                screenWidth / 2 - @divFloor(rl.measureText(prompt1, size), 2),
+                screenHeight / 2 - 0,
+                size,
+                color,
+            );
         }
     }
 }
