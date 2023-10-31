@@ -99,9 +99,9 @@ pub const ArcadeDisplay = struct {
         if (self.grid == null or self.data == null)
             return ArcadeDisplayError.DisplayNotCreate;
 
-        for (y..y + height + 1) |i| {
+        for (y..y + height) |i| {
             if (i < 0 or i >= self.numPxVertical) continue;
-            for (x..x + width + 1) |j| {
+            for (x..x + width) |j| {
                 if (j < 0 or j >= self.numPxHorizontal) continue;
                 self.data.?[i][j] = color;
             }
