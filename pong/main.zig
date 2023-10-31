@@ -2,6 +2,7 @@ const std = @import("std");
 const mem = std.mem;
 const rl = @import("raylib");
 const Display = @import("arcade-display.zig").ArcadeDisplay;
+const Sprite = @import("arcade-display.zig").Sprite;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -19,6 +20,8 @@ pub fn main() !void {
     try display.create();
 
     while (!rl.windowShouldClose()) {
+        try display.clear();
+
         rl.beginDrawing();
         defer rl.endDrawing();
         rl.clearBackground(rl.Color.white);

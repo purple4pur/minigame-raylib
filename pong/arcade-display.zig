@@ -3,11 +3,13 @@ const mem = std.mem;
 const rl = @import("raylib");
 
 pub const ArcadeDisplayError = error{
-    CreateGridTwice,
-    CreateDataTwice,
-    GridNotCreate,
-    DataNotCreate,
+    DisplayCreateTwice,
+    DisplayNotCreate,
 };
+
+pub fn Sprite(comptime width: comptime_int, comptime height: comptime_int) type {
+    return [height][width]rl.Color;
+}
 
 pub const ArcadeDisplay = struct {
     const Self = @This();
@@ -23,6 +25,7 @@ pub const ArcadeDisplay = struct {
     data: ?[][]rl.Color = null,
 
     pub fn init(allocator: mem.Allocator, x: i32, y: i32, numPxHorizontal: u32, numPxVertical: u32, pxSideLen: i32) Self {
+        //{{{
         return Self{
             .allocator = allocator,
             .x = x,
@@ -31,9 +34,11 @@ pub const ArcadeDisplay = struct {
             .numPxVertical = numPxVertical,
             .pxSideLen = pxSideLen,
         };
+        //}}}
     }
 
     pub fn deinit(self: *Self) void {
+        //{{{
         if (self.grid) |grid| {
             for (grid) |line| self.allocator.free(line);
             self.allocator.free(grid);
@@ -43,11 +48,13 @@ pub const ArcadeDisplay = struct {
             self.allocator.free(data);
         }
         self.* = undefined;
+        //}}}
     }
 
     pub fn create(self: *Self) !void {
-        if (self.grid) |_| return ArcadeDisplayError.CreateGridTwice;
-        if (self.data) |_| return ArcadeDisplayError.CreateDataTwice;
+        //{{{
+        if (self.grid != null or self.data != null)
+            return ArcadeDisplayError.DisplayCreateTwice;
 
         self.grid = try self.allocator.alloc([]rl.Rectangle, self.numPxVertical);
         for (self.grid.?, 0..) |*line, i| {
@@ -67,11 +74,68 @@ pub const ArcadeDisplay = struct {
             line.* = try self.allocator.alloc(rl.Color, self.numPxHorizontal);
             for (line.*) |*px| px.* = rl.Color.blank;
         }
+        //}}}
+    }
+
+    pub fn clear(self: *Self) !void {
+        //{{{
+        if (self.grid == null or self.data == null)
+            return ArcadeDisplayError.DisplayNotCreate;
+        for (self.data.?) |*line| {
+            for (line.*) |*px| px.* = rl.Color.blank;
+        }
+        //}}}
+    }
+
+    pub fn addDot(self: *Self, x: usize, y: usize, color: rl.Color) !void {
+        //{{{
+        if (self.grid == null or self.data == null)
+            return ArcadeDisplayError.DisplayNotCreate;
+
+        if (x < 0 or x >= self.numPxHorizontal) return;
+        if (y < 0 or y >= self.numPxVertical) return;
+        self.data.?[y][x] = color;
+        //}}}
+    }
+
+    pub fn addRectangle(self: *Self, x: usize, y: usize, width: usize, height: usize, color: rl.Color) !void {
+        //{{{
+        if (self.grid == null or self.data == null)
+            return ArcadeDisplayError.DisplayNotCreate;
+
+        for (y..y + height + 1) |i| {
+            if (i < 0 or i >= self.numPxVertical) continue;
+            for (x..x + width + 1) |j| {
+                if (j < 0 or j >= self.numPxHorizontal) continue;
+                self.data.?[i][j] = color;
+            }
+        }
+        //}}}
+    }
+
+    /// example: self.addSprite(Sprite(8, 5), 0, 0, sprite)
+    /// example: self.addSprite(@TypeOf(sprite), 0, 0, sprite)
+    pub fn addSprite(self: *Self, comptime T: type, x: usize, y: usize, sprite: T) !void {
+        //{{{
+        if (self.grid == null or self.data == null)
+            return ArcadeDisplayError.DisplayNotCreate;
+
+        const height = sprite.len;
+        const width = if (height > 0) sprite[0].len else 0;
+        for (y..y + height, 0..) |i, ii| {
+            if (i < 0 or i >= self.numPxVertical) continue;
+            for (x..x + width, 0..) |j, jj| {
+                if (j < 0 or j >= self.numPxHorizontal) continue;
+                self.data.?[i][j] = sprite[ii][jj];
+            }
+        }
+        //}}}
     }
 
     pub fn draw(self: Self) !void {
-        if (self.grid == null) return ArcadeDisplayError.GridNotCreate;
-        if (self.data == null) return ArcadeDisplayError.DataNotCreate;
+        //{{{
+        if (self.grid == null or self.data == null)
+            return ArcadeDisplayError.DisplayNotCreate;
 
         for (self.grid.?, 0..) |line, i| {
             for (line, 0..) |px, j| {
@@ -83,9 +147,11 @@ pub const ArcadeDisplay = struct {
                 }, self.data.?[i][j]);
             }
         }
+        //}}}
     }
 
     pub fn _debugOutline(self: Self) void {
+        //{{{
         rl.drawRectangleLines(
             self.x,
             self.y,
@@ -93,5 +159,6 @@ pub const ArcadeDisplay = struct {
             self.pxSideLen * @as(i32, @intCast(self.numPxVertical)),
             rl.Color.red,
         );
+        //}}}
     }
 };
