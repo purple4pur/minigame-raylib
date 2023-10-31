@@ -33,4 +33,9 @@ pub const tests = [_]Program{
         .path = "2048/2048.zig",
         .desc = "Run 2048 test",
     },
+    .{
+        .name = "pong-test",
+        .path = "pong/main.zig",
+        .desc = "Run pong test",
+    },
 };

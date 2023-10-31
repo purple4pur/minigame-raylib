@@ -7,10 +7,6 @@ pub const ArcadeDisplayError = error{
     DisplayNotCreate,
 };
 
-pub fn Sprite(comptime width: comptime_int, comptime height: comptime_int) type {
-    return [height][width]rl.Color;
-}
-
 pub const ArcadeDisplay = struct {
     const Self = @This();
 
@@ -116,6 +112,14 @@ pub const ArcadeDisplay = struct {
     /// example: self.addSprite(Sprite(8, 5), 0, 0, sprite)
     /// example: self.addSprite(@TypeOf(sprite), 0, 0, sprite)
     pub fn addSprite(self: *Self, comptime T: type, x: usize, y: usize, sprite: T) !void {
+        try self.addSpriteEx(T, x, y, sprite, false, null);
+    }
+
+    pub fn addSpriteWith(self: *Self, comptime T: type, x: usize, y: usize, sprite: T, color: rl.Color) !void {
+        try self.addSpriteEx(T, x, y, sprite, true, color);
+    }
+
+    fn addSpriteEx(self: *Self, comptime T: type, x: usize, y: usize, sprite: T, override: bool, color: ?rl.Color) !void {
         //{{{
         if (self.grid == null or self.data == null)
             return ArcadeDisplayError.DisplayNotCreate;
@@ -126,7 +130,11 @@ pub const ArcadeDisplay = struct {
             if (i < 0 or i >= self.numPxVertical) continue;
             for (x..x + width, 0..) |j, jj| {
                 if (j < 0 or j >= self.numPxHorizontal) continue;
-                self.data.?[i][j] = sprite[ii][jj];
+                self.data.?[i][j] = if (override and sprite[ii][jj].a != 0)
+                    // Color.a != 0 means a block with content
+                    color.?
+                else
+                    sprite[ii][jj];
             }
         }
         //}}}
