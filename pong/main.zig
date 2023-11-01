@@ -1,14 +1,23 @@
 const std = @import("std");
 const math = std.math;
 const mem = std.mem;
+const rand = std.rand;
 const rl = @import("raylib");
 const Display = @import("arcade-display.zig").ArcadeDisplay;
 const numbers = @import("sprites.zig").numbers;
 const NumSprite = @TypeOf(numbers[0]);
+const Ball = @import("ball.zig").Ball;
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
+
+    var prng = rand.DefaultPrng.init(blk: {
+        var seed: u64 = undefined;
+        try std.os.getrandom(std.mem.asBytes(&seed));
+        break :blk seed;
+    });
+    const random = prng.random();
 
     const screenWidth = 640;
     const screenHeight = 320;
@@ -21,7 +30,10 @@ pub fn main() !void {
     defer display.deinit();
     try display.create();
 
-    const playerWidth = 4;
+    var ball = Ball.init(random);
+    ball.newRound(.p1);
+
+    const playerWidth = 5;
     var p1Position: f32 = 16 - playerWidth / 2;
     var p2Position: f32 = 16 - playerWidth / 2;
     var p1Score: u16 = 0;
@@ -34,6 +46,9 @@ pub fn main() !void {
         if (rl.isKeyDown(rl.KeyboardKey.key_down)) p2Position += pixelSpeed(0.4);
         p1Position = math.clamp(p1Position, 0, 32 - playerWidth);
         p2Position = math.clamp(p2Position, 0, 32 - playerWidth);
+
+        if (rl.isKeyPressed(rl.KeyboardKey.key_r)) ball.newRound(.p1);
+        ball.update();
 
         rl.beginDrawing();
         defer rl.endDrawing();
@@ -53,6 +68,8 @@ pub fn main() !void {
         try display.addSpriteWith(NumSprite, 27, 1, numbers[p1Score % 10], rl.Color.white);
         try display.addSpriteWith(NumSprite, 34, 1, numbers[p2Score / 10], rl.Color.white);
         try display.addSpriteWith(NumSprite, 39, 1, numbers[p2Score % 10], rl.Color.white);
+        // add ball
+        try display.addDotVec(ball.position, rl.Color.white);
         // draw everything
         try display.draw();
     }

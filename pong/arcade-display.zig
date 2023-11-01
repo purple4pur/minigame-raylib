@@ -94,6 +94,19 @@ pub const ArcadeDisplay = struct {
         //}}}
     }
 
+    pub fn addDotVec(self: *Self, pos: rl.Vector2, color: rl.Color) !void {
+        //{{{
+        if (self.grid == null or self.data == null)
+            return ArcadeDisplayError.DisplayNotCreate;
+
+        if (pos.x < 0 or pos.x >= @as(f32, @floatFromInt(self.numPxHorizontal))) return;
+        if (pos.y < 0 or pos.y >= @as(f32, @floatFromInt(self.numPxVertical))) return;
+        const x = @as(usize, @intFromFloat(pos.x));
+        const y = @as(usize, @intFromFloat(pos.y));
+        self.data.?[y][x] = color;
+        //}}}
+    }
+
     pub fn addRectangle(self: *Self, x: usize, y: usize, width: usize, height: usize, color: rl.Color) !void {
         //{{{
         if (self.grid == null or self.data == null)
