@@ -20,6 +20,11 @@ pub const programs = [_]Program{
         .path = "speedtest/speedtest.zig",
         .desc = "A simple speed/monitor for osu! players",
     },
+    .{
+        .name = "pong",
+        .path = "pong/main.zig",
+        .desc = "Reimplement of the classic Pong game",
+    },
 };
 
 pub const tests = [_]Program{
@@ -27,5 +32,10 @@ pub const tests = [_]Program{
         .name = "2048-test",
         .path = "2048/2048.zig",
         .desc = "Run 2048 test",
+    },
+    .{
+        .name = "pong-test",
+        .path = "pong/main.zig",
+        .desc = "Run pong test",
     },
 };
