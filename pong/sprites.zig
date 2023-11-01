@@ -8,6 +8,7 @@ const O = rl.Color.blank;
 const X = rl.Color.black;
 
 pub const numbers = [_]Sprite(4, 5){
+    //{{{
     .{
         // 0
         .{ X, X, X, X },
@@ -136,4 +137,13 @@ pub const numbers = [_]Sprite(4, 5){
         .{ X, O, O, O },
         .{ X, O, O, O },
     },
+    //}}}
+};
+
+pub const spriteWin = Sprite(13, 5){
+    .{ X, O, O, O, X, O, X, O, X, O, O, O, X },
+    .{ X, O, X, O, X, O, X, O, X, X, O, O, X },
+    .{ X, O, X, O, X, O, X, O, X, O, X, O, X },
+    .{ X, O, X, O, X, O, X, O, X, O, O, X, X },
+    .{ O, X, O, X, O, O, X, O, X, O, O, O, X },
 };

@@ -23,14 +23,14 @@ pub const BothPlayers = struct {
                 worldWidth,
                 worldHeight,
                 1,
-                @as(f32, @floatFromInt(16 - size / 2)),
+                @as(f32, @floatFromInt(worldHeight / 2 - size / 2)),
                 size,
             ),
             .p2 = Player.init(
                 worldWidth,
                 worldHeight,
                 @as(f32, @floatFromInt(worldWidth - 2)),
-                @as(f32, @floatFromInt((16 - size / 2))),
+                @as(f32, @floatFromInt((worldHeight / 2 - size / 2))),
                 size,
             ),
         };
@@ -41,10 +41,12 @@ pub const BothPlayers = struct {
         return if ((self.p1.score + self.p2.score) / 2 % 2 == 0) .p1 else .p2;
     }
 
-    pub fn resetScore(self: *Self) void {
+    pub fn restart(self: *Self) void {
         //{{{
         self.p1.score = 0;
         self.p2.score = 0;
+        self.p1.y = @as(f32, @floatFromInt(self.worldHeight / 2 - self.size / 2));
+        self.p2.y = @as(f32, @floatFromInt(self.worldHeight / 2 - self.size / 2));
         //}}}
     }
 };
