@@ -122,6 +122,16 @@ pub const ArcadeDisplay = struct {
         //}}}
     }
 
+    pub fn addRectangleRec(self: *Self, rec: rl.Rectangle, color: rl.Color) !void {
+        //{{{
+        const x = @as(usize, @intFromFloat(rec.x));
+        const y = @as(usize, @intFromFloat(rec.y));
+        const width = @as(usize, @intFromFloat(rec.width));
+        const height = @as(usize, @intFromFloat(rec.height));
+        try self.addRectangle(x, y, width, height, color);
+        //}}}
+    }
+
     /// example: self.addSprite(Sprite(8, 5), 0, 0, sprite)
     /// example: self.addSprite(@TypeOf(sprite), 0, 0, sprite)
     pub fn addSprite(self: *Self, comptime T: type, x: usize, y: usize, sprite: T) !void {
