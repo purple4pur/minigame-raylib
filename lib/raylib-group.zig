@@ -13,6 +13,7 @@ pub const ObjectProperties = struct {
     y: ?i32 = null,
     size: ?i32 = null,
     color: ?rl.Color = null,
+    visible: bool = true,
 };
 
 pub const rlObject = struct { object: *const DrawableObject, properties: *const ObjectProperties };
@@ -48,6 +49,7 @@ pub const ObjectGroup = struct {
     pub fn drawAllEx(self: Self, offsetX: i32, offsetY: i32) void {
         //{{{
         for (self.components.items) |comp| {
+            if (!comp.properties.visible) continue;
             switch (comp.object.*) {
                 .rectangle => |rec| {
                     if (comp.properties.color == null) @panic(".color is not defined for rectangle");

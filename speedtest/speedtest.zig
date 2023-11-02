@@ -16,7 +16,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     const screenWidth = 450;
-    const screenHeight = 420;
+    const screenHeight = 485;
     rl.initWindow(screenWidth, screenHeight, "Speedtest " ++ versionString);
     defer rl.closeWindow();
 
@@ -159,13 +159,70 @@ pub fn main() !void {
     try groupReset.add(&.{ .object = &resetText, .properties = &resetProp });
     //}}}
 
-    var chart = Chart.init(allocator, 15, 140, 420, 150, 20);
+    // groupTarget
+    // ----------
+    //{{{
+    var groupTarget = rlg.ObjectGroup.init(allocator, 17, 143);
+    defer groupTarget.deinit();
+
+    try groupTarget.add(&.{ .object = &.{
+        .text = @constCast("Target time(s)"),
+    }, .properties = &.{
+        .x = 0,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.gray,
+    } });
+    try groupTarget.add(&.{ .object = &.{
+        .text = @constCast("Target hits"),
+    }, .properties = &.{
+        .x = 0,
+        .y = 24,
+        .size = 20,
+        .color = rl.Color.gray,
+    } });
+    try groupTarget.add(&.{ .object = &.{ .text = @constCast(":") }, .properties = &.{
+        .x = 155,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.gray,
+    } });
+    try groupTarget.add(&.{ .object = &.{ .text = @constCast(":") }, .properties = &.{
+        .x = 155,
+        .y = 24,
+        .size = 20,
+        .color = rl.Color.gray,
+    } });
+
+    var targetTime: i32 = 0;
+    _ = targetTime;
+    var targetTimeText = rlg.DrawableObject{ .text = @constCast("0") };
+    var targetTimeTextProp = rlg.ObjectProperties{
+        .x = 175,
+        .y = 0,
+        .size = 20,
+        .color = rl.Color.light_gray,
+    };
+    try groupTarget.add(&.{ .object = &targetTimeText, .properties = &targetTimeTextProp });
+    var targetHits: i32 = 0;
+    _ = targetHits;
+    var targetHitsText = rlg.DrawableObject{ .text = @constCast("0") };
+    var targetHitsTextProp = rlg.ObjectProperties{
+        .x = 175,
+        .y = 24,
+        .size = 20,
+        .color = rl.Color.light_gray,
+    };
+    try groupTarget.add(&.{ .object = &targetHitsText, .properties = &targetHitsTextProp });
+    //}}}
+
+    var chart = Chart.init(allocator, 15, 200, 420, 150, 20);
     defer chart.deinit();
 
     // groupLegend
     // -----------
     //{{{
-    var groupLegend = rlg.ObjectGroup.init(allocator, 20, 305);
+    var groupLegend = rlg.ObjectGroup.init(allocator, 20, 365);
     defer groupLegend.deinit();
 
     try groupLegend.add(&.{ .object = &.{ .rectangle = .{
@@ -418,7 +475,7 @@ pub fn main() !void {
     // groupFooter
     // -----------
     //{{{
-    var groupFooter = rlg.ObjectGroup.init(allocator, 18, 395);
+    var groupFooter = rlg.ObjectGroup.init(allocator, 18, 460);
     defer groupFooter.deinit();
 
     const helpButtonText = rlg.DrawableObject{ .text = @constCast("How to use?") };
@@ -682,6 +739,7 @@ pub fn main() !void {
         groupKps.drawAll();
 
         groupReset.drawAll();
+        groupTarget.drawAll();
         chart.draw();
 
         allocator.free(bpmNowText.text);
