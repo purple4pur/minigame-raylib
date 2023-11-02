@@ -5,6 +5,7 @@ const rl = @import("raylib");
 pub const DrawableObject = union(enum) {
     rectangle: rl.Rectangle,
     text: [:0]u8,
+    group: *ObjectGroup,
 };
 
 pub const ObjectProperties = struct {
@@ -41,14 +42,18 @@ pub const ObjectGroup = struct {
     }
 
     pub fn drawAll(self: Self) void {
+        self.drawAllEx(0, 0);
+    }
+
+    pub fn drawAllEx(self: Self, offsetX: i32, offsetY: i32) void {
         //{{{
         for (self.components.items) |comp| {
             switch (comp.object.*) {
                 .rectangle => |rec| {
                     if (comp.properties.color == null) @panic(".color is not defined for rectangle");
                     rl.drawRectangleRec(.{
-                        .x = @as(f32, @floatFromInt(self.x)) + rec.x,
-                        .y = @as(f32, @floatFromInt(self.y)) + rec.y,
+                        .x = @as(f32, @floatFromInt(self.x + offsetX)) + rec.x,
+                        .y = @as(f32, @floatFromInt(self.y + offsetY)) + rec.y,
                         .width = rec.width,
                         .height = rec.height,
                     }, comp.properties.color.?);
@@ -60,10 +65,18 @@ pub const ObjectGroup = struct {
                     if (comp.properties.color == null) @panic(".color is not defined for text");
                     rl.drawText(
                         text,
-                        self.x + comp.properties.x.?,
-                        self.y + comp.properties.y.?,
+                        self.x + offsetX + comp.properties.x.?,
+                        self.y + offsetY + comp.properties.y.?,
                         comp.properties.size.?,
                         comp.properties.color.?,
+                    );
+                },
+                .group => |group| {
+                    if (comp.properties.x == null) @panic(".x is not defined for group");
+                    if (comp.properties.y == null) @panic(".y is not defined for group");
+                    group.drawAllEx(
+                        self.x + offsetX,
+                        self.y + offsetY,
                     );
                 },
             }
